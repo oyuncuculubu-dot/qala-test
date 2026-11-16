@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bəyəni Sıralaması</title>
+<style>
+@font-face{
+  font-family:"Exo 2";
+  src:url("assets/Exo2.woff2") format("woff2");
+  font-weight:100 900;
+  font-style:normal;
+  font-display:block;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;height:100%;
+  background:transparent;
+  overflow:hidden;
+  font-family:"Exo 2","Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+  color:#d4d4d4;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+body{padding:28px 10px 10px 12px}
+#board{
+  width:fit-content;
+  max-width:100%;
+  display:flex;
+  flex-direction:column;
+}
+body.rtl{direction:rtl;padding:28px 12px 10px 10px}
+body.rtl #board{margin-left:auto}
+
+.row{
+  display:flex;
+  align-items:center;
+  margin:4px 0;
+  width:max-content;
+  max-width:100%;
+}
+.rank{
+  width:36px;
+  flex:none;
+  text-align:center;
+  font-weight:700;
+  font-size:1.5em;
+  color:var(--rank,#d9d9d9);
+  line-height:1;
+  padding-top:0;
+  direction:ltr;
+}
+.rank .medal{
+  width:32px;height:32px;
+  display:block;
+  margin:0 auto;
+}
+.ava-w{
+  position:relative;
+  flex:none;
+  width:50px;
+  height:50px;
+  margin-inline-end:3px;
+}
+.ava{
+  width:44px;height:44px;
+  border-radius:50%;
+  border:3px solid transparent;
+  object-fit:cover;
+  object-position:center 20%;
+  display:block;
+  background:#d0d0d0;
+  box-sizing:content-box;
+}
+.r1 .ava{border-color:rgb(246,183,56)}
+.r2 .ava{border-color:rgb(192,192,192)}
+.r3 .ava{border-color:rgb(205,127,50)}
+.crown{
+  position:absolute;
+  height:45px;
+  width:auto;
+  top:-26px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:2;
+  pointer-events:none;
+}
+body.rtl .crown{left:50%;right:auto}
+.meta{
+  min-width:0;
+  padding-inline-start:6px;
+  padding-top:0;
+}
+.name{
+  font-weight:700;
+  color:var(--name,#3e9bde);
+  font-size:var(--fs,16px);
+  line-height:1.25;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:280px;
+}
+.likes{
+  display:flex;
+  align-items:flex-start;
+  color:var(--points,#d4d4d4);
+  font-size:calc(var(--fs,16px) * 0.95);
+  line-height:1.3;
+  margin-top:1px;
+  font-weight:500;
+}
+.heart{
+  width:12px;height:12px;
+  margin:2px 5px 0 0;
+  flex:none;
+  transform-origin:center center;
+  display:block;
+}
+body.rtl .heart{margin:2px 0 0 5px}
+.count{
+  display:inline-block;
+  transform-origin:center left;
+  font-weight:500;
+}
+body.rtl .count{transform-origin:center right}
+.unit{margin-inline-start:5px;opacity:.8;font-weight:500;font-size:.9em}
+
+body.outline .name,
+body.outline .likes,
+body.outline .rank{text-shadow:#242424 1px 1px 1px}
+
+body.hide-rank .rank{display:none}
+body.hide-likes .likes{display:none}
+
+@keyframes slideInL{
+  0%{transform:translateX(-100%);opacity:0}
+  100%{transform:translateX(0);opacity:1}
+}
+@keyframes slideInR{
+  0%{transform:translateX(100%);opacity:0}
+  100%{transform:translateX(0);opacity:1}
+}
+@keyframes countUp{
+  0%{transform:scale(1)}
+  20%{transform:scale(1.4)}
+  100%{transform:scale(1)}
+}
+@keyframes pulse{
+  0%{transform:scale(1)}
+  30%{transform:scale(1.5)}
+  100%{transform:scale(1)}
+}
+.row.enter{animation:slideInL .5s ease-out both}
+body.rtl .row.enter{animation-name:slideInR}
+.count.bump{animation:countUp .5s ease-out}
+.heart.beat{animation:pulse 1s linear 10}
+
+#help{
+  display:none;
+  position:fixed;inset:12px auto auto 12px;
+  z-index:50;
+  width:min(360px,calc(100% - 24px));
+  background:rgba(16,14,22,.92);
+  color:#f2efe8;
+  border:1px solid rgba(255,220,170,.25);
+  border-radius:12px;
+  padding:14px 16px 16px;
+  font-size:13px;
+  line-height:1.45;
+  font-weight:500;
+  box-shadow:0 12px 32px rgba(0,0,0,.4);
+}
+#help.show{display:block}
+#help h2{font-size:15px;font-weight:700;color:#ead7a4;margin-bottom:8px;letter-spacing:.02em}
+#help kbd{
+  display:inline-block;min-width:1.3em;text-align:center;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:4px;padding:0 5px;margin-right:6px;
+  font-family:inherit;font-weight:700;font-size:12px;color:#fff;
+}
+#help .hint{margin-top:8px;color:rgba(255,240,210,.62);font-size:12px}
+</style>
+</head>
+<body>
+<div id="board" aria-label="Bəyəni sıralaması"></div>
+<div id="help">
+  <h2>Bəyəni sıralaması — kömək</h2>
+  <div><kbd>T</kbd> test bəyəniləri (nümunə istifadəçilər)</div>
+  <div><kbd>R</kbd> sıralamanı sıfırla</div>
+  <div><kbd>H</kbd> bu köməyi aç / bağla</div>
+  <div class="hint">
+    OBS: Brauzer mənbəsi → Yerli fayl → BeyeniSiralamasi.html<br>
+    Tövsiyə olunan ölçü: 400 × 700<br>
+    TikFinity açıq olmalıdır (ws://127.0.0.1:21213/)<br>
+    URL: ?test=1 &nbsp; ?reset=1 &nbsp; ?count=9 &nbsp; ?rtl=1 &nbsp; ?name=yayim &nbsp; ?outline=1 &nbsp; ?unit=1
+  </div>
+</div>
+<script>
+(function(){
+  const Q = new URLSearchParams(location.search);
+  const flag = (k, dflt) => {
+    if (!Q.has(k)) return dflt;
+    const v = Q.get(k);
+    return v !== '0' && v !== 'false' && v !== 'off';
+  };
+  const CFG = {
+    port: Q.get('port') || '21213',
+    test: flag('test', false),
+    reset: flag('reset', false),
+    count: Math.max(1, Math.min(50, parseInt(Q.get('count') || '9', 10) || 9)),
+    rtl: Q.get('rtl') === '1' || Q.get('align') === 'right',
+    name: Q.get('name') || Q.get('id') || 'default',
+    outline: flag('outline', false) || flag('border', false),
+    unit: flag('unit', false),
+    bg: Q.get('bg') || '',
+    size: parseFloat(Q.get('size') || Q.get('fontsize') || '') || 17,
+    nameColor: Q.get('nameColor') || Q.get('namecolor') || '#3e9bde',
+    pointsColor: Q.get('pointsColor') || Q.get('pointscolor') || '#d4d4d4',
+    rankColor: Q.get('rankColor') || Q.get('rankcolor') || '#d9d9d9',
+    showRank: Q.get('rank') !== '0',
+    showLikes: Q.get('likes') !== '0',
+    showCrown: Q.get('crown') !== '0',
+    showTrophy: Q.get('trophy') !== '0',
+    showHeart: Q.get('heart') !== '0',
+    nosave: Q.get('nosave') === '1'
+  };
+
+  const STORE = 'beyeni:' + (CFG.test ? 'test:' : '') + CFG.name;
+  const DEFAULT_AV = 'assets/avatar_default.svg';
+  const MEDALS = {1:'assets/medal_gold.svg', 2:'assets/medal_silver.svg', 3:'assets/medal_bronze.svg'};
+  const HEART = '<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path fill="#ed1b24" d="M12 21S3 14.2 3 8.6C3 5.5 5.4 3.2 8.4 3.2c1.7 0 3.2.8 3.6 2.1.4-1.3 1.9-2.1 3.6-2.1 3 0 5.4 2.3 5.4 5.4C21 14.2 12 21 12 21z"/></svg>';
+
+  const TEST_USERS = [
+    {id:'aysel',    name:'Aysel',    avatar:'assets/demo/aysel.jpg'},
+    {id:'murad',    name:'Murad_77', avatar:'assets/demo/murad.jpg'},
+    {id:'leyla',    name:'Leyla',    avatar:'assets/demo/leyla.jpg'},
+    {id:'orxan',    name:'Orxan',    avatar:'assets/demo/orxan.jpg'},
+    {id:'nigar',    name:'nigar.k',  avatar:''},
+    {id:'elvin',    name:'Elvin',    avatar:''},
+    {id:'gunay',    name:'Günay',    avatar:''},
+    {id:'tural',    name:'Tural',    avatar:''},
+    {id:'sevda',    name:'Sevda',    avatar:''}
+  ];
+  const SEED = [
+    ['aysel',15005],['murad',10536],['leyla',7056],['orxan',1533],
+    ['nigar',830],['elvin',125],['gunay',90],['tural',85],['sevda',7]
+  ];
+
+  const board = document.getElementById('board');
+  const helpEl = document.getElementById('help');
+  const users = new Map(); // id -> {id,name,avatar,likes}
+  const lastLikes = new Map();
+  const lastRank = new Map();
+  const lastLikeAt = new Map();
+  const rows = new Map();
+  let wsOK = false;
+  let firstPaint = true;
+
+  const root = document.documentElement;
+  root.style.setProperty('--fs', CFG.size + 'px');
+  root.style.setProperty('--name', CFG.nameColor);
+  root.style.setProperty('--points', CFG.pointsColor);
+  root.style.setProperty('--rank', CFG.rankColor);
+  document.body.classList.toggle('rtl', CFG.rtl);
+  document.body.classList.toggle('outline', CFG.outline);
+  document.body.classList.toggle('hide-rank', !CFG.showRank);
+  document.body.classList.toggle('hide-likes', !CFG.showLikes);
+  if (CFG.bg){
+    const bg = CFG.bg.startsWith('#') || CFG.bg.startsWith('rgb') || CFG.bg.startsWith('hsl') ? CFG.bg : ('#' + CFG.bg);
+    document.body.style.background = bg;
+  }
+
+  function fmt(n){
+    return Math.floor(Number(n) || 0).toLocaleString('en-US');
+  }
+  function pick(obj, keys){
+    if (!obj || typeof obj !== 'object') return '';
+    for (const k of keys){
+      if (obj[k] != null && obj[k] !== '') return obj[k];
+    }
+    return '';
+  }
+  function save(){
+    if (CFG.nosave) return;
+    try{
+      const list = [...users.values()].map(u => ({id:u.id,name:u.name,avatar:u.avatar,likes:u.likes}));
+      localStorage.setItem(STORE, JSON.stringify({v:1, users:list}));
+    }catch(_){}
+  }
+  function load(){
+    if (CFG.nosave) return;
+    try{
+      const raw = localStorage.getItem(STORE);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      const list = data && data.users || [];
+      for (const u of list){
+        if (!u || !u.id) continue;
+        users.set(String(u.id), {id:String(u.id), name:u.name||String(u.id), avatar:u.avatar||'', likes:Number(u.likes)||0});
+      }
+    }catch(_){}
+  }
+
+  function addLike(id, name, avatar, n){
+    id = String(id || name || '').trim();
+    if (!id) return;
+    n = Number(n);
+    if (!Number.isFinite(n) || n <= 0) return;
+    let u = users.get(id);
+    if (!u){
+      u = {id, name: name || id, avatar: avatar || '', likes: 0};
+      users.set(id, u);
+    }
+    if (name) u.name = name;
+    if (avatar) u.avatar = avatar;
+    u.likes += n;
+    lastLikeAt.set(id, Date.now());
+    save();
+    render();
+  }
+
+  function ranked(){
+    return [...users.values()]
+      .filter(u => u.likes > 0)
+      .sort((a,b) => b.likes - a.likes || String(a.name).localeCompare(String(b.name),'az'))
+      .slice(0, CFG.count);
+  }
+
+  function restartAnim(el, cls){
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+  }
+
+  function makeRow(u){
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.dataset.id = u.id;
+    row.innerHTML =
+      '<div class="rank"></div>' +
+      '<div class="ava-w"><img class="crown" alt="" src="assets/crown.svg" hidden><img class="ava" alt=""></div>' +
+      '<div class="meta"><div class="name"></div><div class="likes"></div></div>';
+    const img = row.querySelector('.ava');
+    img.addEventListener('error', () => { img.onerror = null; img.src = DEFAULT_AV; });
+    const likes = row.querySelector('.likes');
+    if (CFG.showHeart){
+      likes.innerHTML = HEART + '<span class="count"></span>' + (CFG.unit ? '<span class="unit">bəyəni</span>' : '');
+    } else {
+      likes.innerHTML = '<span class="count"></span>' + (CFG.unit ? '<span class="unit">bəyəni</span>' : '');
+    }
+    row.addEventListener('animationend', ev => {
+      if (ev.animationName === 'slideInL' || ev.animationName === 'slideInR'){
+        row.classList.remove('enter');
+        row.style.animationDelay = '';
+      }
+    });
+    const countEl0 = row.querySelector('.count');
+    if (countEl0) countEl0.addEventListener('animationend', ev => {
+      if (ev.animationName === 'countUp') countEl0.classList.remove('bump');
+    });
+    const heart0 = row.querySelector('.heart');
+    if (heart0) heart0.addEventListener('animationend', ev => {
+      if (ev.animationName === 'pulse') heart0.classList.remove('beat');
+    });
+    return row;
+  }
+
+  function render(){
+    const list = ranked();
+    const seen = new Set();
+    const isFirst = firstPaint;
+    firstPaint = false;
+
+    list.forEach((u, i) => {
+      const rank = i + 1;
+      let row = rows.get(u.id);
+      if (!row){
+        row = makeRow(u);
+        rows.set(u.id, row);
+      }
+      seen.add(u.id);
+
+      row.classList.remove('r1','r2','r3');
+      if (rank <= 3) row.classList.add('r' + rank);
+
+      const rankEl = row.querySelector('.rank');
+      if (CFG.showTrophy && MEDALS[rank]){
+        if (!rankEl.querySelector('img')) rankEl.innerHTML = '<img class="medal" alt="">';
+        const m = rankEl.querySelector('img');
+        const src = MEDALS[rank];
+        if (m.getAttribute('src') !== src) m.setAttribute('src', src);
+        m.alt = rank + '';
+      } else {
+        const label = rank + '.';
+        if (rankEl.textContent !== label) rankEl.textContent = label;
+      }
+
+      const crown = row.querySelector('.crown');
+      crown.hidden = !(CFG.showCrown && rank === 1);
+
+      const img = row.querySelector('.ava');
+      const nextSrc = u.avatar || DEFAULT_AV;
+      if (img.dataset.src !== nextSrc){
+        img.dataset.src = nextSrc;
+        img.src = nextSrc;
+      }
+
+      row.querySelector('.name').textContent = u.name;
+
+      const countEl = row.querySelector('.count');
+      const prev = lastLikes.has(u.id) ? lastLikes.get(u.id) : null;
+      const rose = prev == null ? false : u.likes > prev;
+      if (countEl && countEl.textContent !== fmt(u.likes)){
+        countEl.textContent = fmt(u.likes);
+      } else if (countEl && countEl.textContent === ''){
+        countEl.textContent = fmt(u.likes);
+      }
+
+      const prevRank = lastRank.get(u.id);
+      const placeChanged = prevRank !== rank;
+      const isNew = prevRank == null;
+      const climbed = placeChanged && rose;
+
+      // Slide in when a row first appears, or when that user climbs (likes went up and rank changed).
+      // Users only pushed down stay put, like TikFinity.
+      if (isNew || climbed){
+        restartAnim(row, 'enter');
+        if (isFirst) row.style.animationDelay = (rank - 1) * 0.1 + 's';
+        else row.style.animationDelay = '0s';
+      }
+
+      if (rose && countEl){
+        restartAnim(countEl, 'bump');
+      }
+      const heart = row.querySelector('.heart');
+      const at = lastLikeAt.get(u.id);
+      if (heart && CFG.showHeart && at && Date.now() - at < 10000){
+        if (rose || isNew || !heart.classList.contains('beat')){
+          restartAnim(heart, 'beat');
+        }
+      }
+
+      lastLikes.set(u.id, u.likes);
+      lastRank.set(u.id, rank);
+      board.appendChild(row);
+    });
+
+    for (const [id, row] of rows){
+      if (!seen.has(id)){
+        row.remove();
+        rows.delete(id);
+        lastRank.delete(id);
+      }
+    }
+  }
+
+  function resetAll(reseed){
+    users.clear();
+    lastLikes.clear();
+    lastRank.clear();
+    lastLikeAt.clear();
+    for (const [,row] of rows) row.remove();
+    rows.clear();
+    firstPaint = true;
+    if (!CFG.nosave){
+      try{ localStorage.removeItem(STORE); }catch(_){}
+    }
+    if (reseed) seedTest(false);
+    else render();
+  }
+
+  function seedTest(animate){
+    for (const [id, likes] of SEED){
+      const meta = TEST_USERS.find(t => t.id === id) || {id, name:id, avatar:''};
+      users.set(id, {id, name:meta.name, avatar:meta.avatar||'', likes});
+      if (!animate){
+        lastLikes.set(id, likes);
+      }
+    }
+    save();
+    render();
+  }
+
+  function testBurst(){
+    const pool = TEST_USERS;
+    const u = pool[(Math.random() * pool.length) | 0];
+    const n = 1 + ((Math.random() * 40) | 0);
+    addLike(u.id, u.name, u.avatar, n);
+  }
+
+  function onLike(raw){
+    const d = raw && typeof raw === 'object' ? raw : {};
+    const user = d.user && typeof d.user === 'object' ? d.user : {};
+    const idKeys = ['uniqueId','unique_id','userId','user_id','uniqueID'];
+    const nameKeys = ['nickname','nickName','name','userName','displayName'];
+    const avKeys = ['profilePictureUrl','profilePicture','profile_picture','avatarUrl','avatar'];
+    const uniqueId = String(pick(d,idKeys) || pick(user,idKeys) || '');
+    const nickname = String(pick(d,nameKeys) || pick(user,nameKeys) || uniqueId);
+    const avatar = String(pick(d,avKeys) || pick(user,avKeys) || '');
+    const rawN = d.likeCount ?? d.like_count ?? d.likes ?? d.count ?? d.like ?? user.likeCount;
+    let n = Number(rawN);
+    if (rawN == null || rawN === '') n = 1;
+    if (!Number.isFinite(n) || n <= 0) return;
+    const id = uniqueId || nickname;
+    if (!id) return;
+    addLike(id, nickname || id, avatar, n);
+  }
+
+  function connectWS(){
+    let ws;
+    try{ ws = new WebSocket('ws://127.0.0.1:' + CFG.port + '/'); }
+    catch(e){ setTimeout(connectWS, 4000); return; }
+    ws.onopen = () => { wsOK = true; };
+    ws.onmessage = (e) => {
+      let m; try{ m = JSON.parse(e.data); } catch(_){ return; }
+      if (m && m.data && typeof m.data === 'string'){
+        try{ m = Object.assign({}, m, {data: JSON.parse(m.data)}); }catch(_){}
+      }
+      const ev = String(m.event || m.type || '').toLowerCase();
+      const payload = (m.data != null && typeof m.data === 'object') ? m.data : m;
+      if (ev === 'like' || ev === 'likes') onLike(payload);
+      else if (ev === '' && (payload.likeCount != null || payload.like_count != null) && (payload.uniqueId || payload.nickname || (payload.user && (payload.user.uniqueId || payload.user.nickname)))){
+        onLike(payload);
+      }
+    };
+    ws.onclose = () => { wsOK = false; setTimeout(connectWS, 4000); };
+    ws.onerror = () => { try{ ws.close(); }catch(_){} };
+  }
+
+  function onKey(e){
+    if (e.repeat || e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+    const k = (e.key || '').toLowerCase();
+    if (k === 't') testBurst();
+    else if (k === 'r') resetAll(false);
+    else if (k === 'h') helpEl.classList.toggle('show');
+  }
+
+  if (CFG.reset){
+    try{ localStorage.removeItem(STORE); }catch(_){}
+  } else {
+    load();
+  }
+  if (CFG.test && users.size === 0) seedTest(true);
+  else render();
+
+  connectWS();
+  addEventListener('keydown', onKey);
+
+  window.Beyeni = {
+    addLike: (id, name, avatar, n) => addLike(id, name, avatar, n == null ? 1 : n),
+    like: onLike,
+    reset: () => resetAll(false),
+    seed: () => seedTest(true),
+    test: testBurst,
+    setUsers: (list, animate) => {
+      users.clear(); lastLikes.clear(); lastRank.clear(); lastLikeAt.clear();
+      for (const [,row] of rows) row.remove();
+      rows.clear();
+      firstPaint = true;
+      for (const u of list){
+        const id = String(u.id);
+        const likes = Number(u.likes)||0;
+        users.set(id, {id, name:u.name||id, avatar:u.avatar||'', likes});
+        if (animate === false) lastLikes.set(id, likes);
+      }
+      save(); render();
+    },
+    render,
+    users,
+    get state(){ return {wsOK, count: users.size, top: ranked().map(u=>({id:u.id,name:u.name,likes:u.likes}))}; }
+  };
+})();
+</script>
+</body>
+</html>

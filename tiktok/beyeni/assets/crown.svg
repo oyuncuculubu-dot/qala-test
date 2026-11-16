@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe56a"/>
+      <stop offset="45%" stop-color="#ffcd00"/>
+      <stop offset="100%" stop-color="#e0a200"/>
+    </linearGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffd84a"/>
+      <stop offset="100%" stop-color="#d49400"/>
+    </linearGradient>
+  </defs>
+  <!-- three-point crown, original path -->
+  <path d="M18 76 L18 52 L40 80 L64 22 L88 80 L110 52 L110 76
+           L110 98 Q110 106 100 106 L28 106 Q18 106 18 98 Z"
+        fill="url(#gold)" stroke="#1a1400" stroke-width="4.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- band highlight -->
+  <rect x="24" y="84" width="80" height="8" rx="3" fill="#fff3a0" opacity="0.45"/>
+  <!-- tip jewels -->
+  <circle cx="64" cy="26" r="6.2" fill="#ffe566" stroke="#1a1400" stroke-width="3"/>
+  <circle cx="18" cy="52" r="5" fill="#ffe566" stroke="#1a1400" stroke-width="3"/>
+  <circle cx="110" cy="52" r="5" fill="#ffe566" stroke="#1a1400" stroke-width="3"/>
+</svg>
