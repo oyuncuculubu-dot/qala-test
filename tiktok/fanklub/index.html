@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fan klub — Məni sev</title>
+<style>
+@font-face{
+  font-family:"Noto Sans";
+  src:url("assets/NotoSans.woff2") format("woff2");
+  font-weight:100 900;
+  font-style:normal;
+  font-display:block;
+}
+:root{
+  --card-rgb:20,16,28;
+  --card-opacity:.50;
+  --cream:#F4EEE8;
+  --muted:#D2CBD6;
+  --pink:#FF8CAA;
+  --pink-soft:#FFB0C4;
+  --gold:#E8C56B;
+  --gold-lt:#F5D78A;
+  --white:#FCFAF8;
+  --ring:#F0D48A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;height:100%;
+  background:transparent;
+  overflow:hidden;
+  font-family:"Noto Sans","Segoe UI","Noto Sans Azerbaijani",sans-serif;
+  color:var(--cream);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+body{padding:20px 16px 16px}
+body.has-bg{background-color:var(--page-bg,#121018);background-image:var(--page-bg-img,none);background-size:cover;background-position:center;background-repeat:no-repeat}
+
+#card{
+  position:relative;
+  width:500px;
+  max-width:100%;
+  min-height:530px;
+  height:auto;
+  padding:22px 24px 26px;
+  border-radius:32px;
+  background:rgba(var(--card-rgb), var(--card-opacity));
+  -webkit-backdrop-filter:blur(18px) saturate(1.2);
+  backdrop-filter:blur(18px) saturate(1.2);
+  border:1px solid rgba(255,210,190,.34);
+  box-shadow:
+    0 0 40px rgba(255,80,130,.12),
+    0 14px 36px rgba(0,0,0,.28);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  overflow:hidden;
+}
+#card::before{
+  content:"";
+  position:absolute;inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,245,230,.08),transparent 26%,transparent 72%,rgba(0,0,0,.10));
+  box-shadow:inset 0 1px 0 rgba(255,230,210,.16);
+}
+
+header.top{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex:none;
+  flex-shrink:0;
+}
+header.top .logo{
+  width:58px;height:58px;
+  object-fit:contain;
+  flex:none;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));
+}
+header.top .titles{min-width:0;flex:1}
+header.top h1{
+  font-size:30px;
+  font-weight:650;
+  color:var(--cream);
+  letter-spacing:-.01em;
+  line-height:1.1;
+  text-shadow:0 1px 2px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35);
+}
+header.top .sub{
+  font-size:17px;
+  font-weight:450;
+  color:var(--muted);
+  margin-top:3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-shadow:0 1px 3px rgba(0,0,0,.55),0 2px 10px rgba(0,0,0,.35);
+}
+
+.count-wrap{
+  margin-top:18px;
+  text-align:center;
+  flex:none;
+}
+.count-wrap .count{
+  font-size:92px;
+  font-weight:750;
+  color:var(--white);
+  line-height:.92;
+  letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;
+  display:inline-block;
+  transform-origin:center center;
+  text-shadow:0 2px 3px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.35);
+}
+.count-wrap .count.pop{animation:none} /* driven in JS via transform */
+.count-wrap .unit{
+  display:block;
+  margin-top:6px;
+  font-size:24px;
+  font-weight:500;
+  color:var(--pink);
+  letter-spacing:.01em;
+  text-shadow:0 1px 3px rgba(0,0,0,.5),0 2px 10px rgba(0,0,0,.3);
+}
+.count-wrap .rule{
+  width:96px;height:2px;
+  margin:14px auto 0;
+  background:linear-gradient(90deg, transparent, var(--gold) 12%, var(--gold) 88%, transparent);
+  border-radius:2px;
+  opacity:.9;
+}
+
+.feature{
+  position:relative;
+  width:100%;
+  flex:none;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  margin-top:8px;
+  overflow:visible;
+}
+.feature.empty .ava-wrap,
+.feature.empty .hint{display:none}
+
+.ava-wrap{
+  position:relative;
+  width:160px;height:160px;
+  margin-top:6px;
+  z-index:2;
+  flex:none;
+  flex-shrink:0;
+  overflow:visible;
+}
+.ava-wrap canvas#sp{
+  position:absolute;
+  left:50%;top:50%;
+  width:300px;height:300px;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  z-index:1;
+}
+.ava-wrap .feat-ava{
+  width:112px;height:112px;
+  position:absolute;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  object-fit:cover;
+  object-position:center 20%;
+  background:#2a2433;
+  border:2px solid rgba(240,212,138,.72);
+  box-shadow:
+    0 0 0 1px rgba(60,40,20,.35),
+    0 6px 16px rgba(0,0,0,.35);
+  display:block;
+  z-index:2;
+}
+.ava-wrap .badge{
+  position:absolute;
+  right:14px;bottom:14px;
+  width:36px;height:36px;
+  padding:3px;
+  background:rgba(18,14,22,.78);
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
+  border:1px solid rgba(232,197,107,.7);
+  border-radius:50%;
+  object-fit:contain;
+  z-index:3;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+
+.welcome{
+  margin-top:16px;
+  font-size:26px;
+  font-weight:700;
+  color:var(--white);
+  text-align:center;
+  line-height:1.25;
+  text-shadow:0 1px 2px rgba(0,0,0,.5),0 4px 14px rgba(0,0,0,.35);
+  max-width:100%;
+  padding:0 8px;
+  white-space:nowrap;
+  overflow-x:hidden;
+  overflow-y:visible;
+  text-overflow:ellipsis;
+  flex:none;
+  min-height:1.3em;
+}
+.hint{
+  margin-top:6px;
+  font-size:17px;
+  font-weight:450;
+  color:var(--muted);
+  text-align:center;
+  flex:none;
+  min-height:1.25em;
+  text-shadow:0 1px 3px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.35);
+}
+
+.row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:14px;
+  margin-top:18px;
+  height:48px;
+  flex:none;
+}
+.row .mini{
+  width:44px;height:44px;
+  border-radius:50%;
+  object-fit:cover;
+  object-position:center 20%;
+  background:#2a2433;
+  border:2px solid rgba(210,190,170,.42);
+  box-shadow:0 2px 6px rgba(0,0,0,.35);
+  display:block;
+  flex:none;
+}
+
+#help{
+  display:none;
+  position:fixed;inset:12px auto auto 12px;
+  z-index:50;
+  width:min(380px,calc(100% - 24px));
+  background:rgba(16,14,22,.94);
+  color:#f2efe8;
+  border:1px solid rgba(255,220,170,.25);
+  border-radius:12px;
+  padding:14px 16px 16px;
+  font-size:13px;
+  line-height:1.45;
+  font-weight:500;
+  box-shadow:0 12px 32px rgba(0,0,0,.4);
+}
+#help.show{display:block}
+#help h2{font-size:15px;font-weight:700;color:#ead7a4;margin-bottom:8px}
+#help kbd{
+  display:inline-block;min-width:1.3em;text-align:center;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:4px;padding:0 5px;margin-right:6px;
+  font-family:inherit;font-weight:700;font-size:12px;color:#fff;
+}
+#help .hintline{margin-top:8px;color:rgba(255,240,210,.62);font-size:12px}
+</style>
+</head>
+<body>
+<div id="card" aria-label="Fan klub">
+  <header class="top">
+    <img class="logo" src="assets/heart_me.png" alt="">
+    <div class="titles">
+      <h1>Fan klub</h1>
+      <div class="sub">Məni sev abunələri</div>
+    </div>
+  </header>
+  <div class="count-wrap">
+    <div class="count" id="count">0</div>
+    <div class="unit">üzv</div>
+    <div class="rule"></div>
+  </div>
+  <div class="feature empty" id="feature">
+    <div class="ava-wrap" id="avaWrap">
+      <canvas id="sp" width="600" height="600"></canvas>
+      <img class="feat-ava" id="featAva" alt="" src="assets/avatar_default.svg">
+      <img class="badge" src="assets/heart_me.png" alt="">
+    </div>
+    <div class="welcome" id="welcome">Hələ üzv yoxdur</div>
+    <div class="hint" id="hint">Məni sev göndərən ilk izləyici burada görünəcək</div>
+  </div>
+  <div class="row" id="row"></div>
+</div>
+<div id="help">
+  <h2>Fan klub — kömək</h2>
+  <div><kbd>T</kbd> nümunə üzv əlavə et (test)</div>
+  <div><kbd>R</kbd> siyahını sıfırla</div>
+  <div><kbd>H</kbd> bu köməyi aç / bağla</div>
+  <div class="hintline">
+    OBS: Brauzer mənbəsi → Yerli fayl → FanKlub.html<br>
+    Tövsiyə olunan ölçü: 560 × 680, FPS 30<br>
+    Fon şəffafdır. “Mənbə görünməyəndə söndür” seçimini SÖNDÜRÜN.<br>
+    TikFinity AZ Studio açıq olmalıdır (http://localhost:4000)<br>
+    URL: ?test=1 &nbsp; ?reset=1 &nbsp; ?rotate=6 &nbsp; ?opacity=0.5 &nbsp; ?subscribe=0 &nbsp; ?port=21213
+  </div>
+</div>
+<script src="studio-connect.js"></script>
+<script>
+(() => {
+  'use strict';
+  const Q = new URLSearchParams(location.search);
+  const flag = (k, dflt) => {
+    if (!Q.has(k)) return dflt;
+    const v = String(Q.get(k)).toLowerCase();
+    return v !== '0' && v !== 'false' && v !== 'off' && v !== 'no';
+  };
+  const num = (k, dflt) => {
+    const v = parseFloat(Q.get(k));
+    return Number.isFinite(v) ? v : dflt;
+  };
+  const CFG = {
+    port: Q.get('port') || '21213',
+    test: flag('test', false),
+    reset: flag('reset', false),
+    nosave: flag('nosave', false),
+    step: flag('step', false),
+    subscribe: flag('subscribe', true),
+    rotate: Math.max(0, num('rotate', 6)),
+    welcome: Math.max(1, num('welcome', 4.8)),
+    name: Q.get('name') || Q.get('id') || 'default',
+    bg: Q.get('bg') || '',
+    bgimg: Q.get('bgimg') || '',
+    opacity: (function(){
+      if (!Q.has('opacity')) return 0.50;
+      let v = String(Q.get('opacity')).trim().replace('%','');
+      v = parseFloat(v);
+      if (!Number.isFinite(v)) return 0.50;
+      if (v > 1) v = v / 100;
+      return Math.min(0.95, Math.max(0.15, v));
+    })(),
+    fallback: 'assets/avatar_default.svg'
+  };
+
+  document.documentElement.style.setProperty('--card-opacity', String(CFG.opacity));
+  if (CFG.bg) {
+    document.body.classList.add('has-bg');
+    document.body.style.setProperty('--page-bg', CFG.bg[0] === '#' || CFG.bg.startsWith('rgb') ? CFG.bg : ('#' + CFG.bg));
+  }
+  if (CFG.bgimg) {
+    document.body.classList.add('has-bg');
+    const raw = String(CFG.bgimg).replace(/["')]/g, '');
+    document.body.style.setProperty('--page-bg-img', 'url("' + raw + '")');
+  }
+
+  const STORE = 'FanKlub_' + CFG.name;
+  const DEFAULT_AV = CFG.fallback;
+  const HEART_ID = 7934;
+  const HEART_NAMES = new Set(['heart me', 'heartme', 'məni sev', 'meni sev', 'məni-sev']);
+
+  const TEST = [
+    {id:'aysel',    name:'Aysel',    avatar:'assets/demo/aysel.jpg'},
+    {id:'murad',    name:'Murad_77', avatar:'assets/demo/murad.jpg'},
+    {id:'leyla',    name:'Leyla',    avatar:'assets/demo/leyla.jpg'},
+    {id:'orxan',    name:'Orxan',    avatar:'assets/demo/orxan.jpg'},
+    {id:'nigar',    name:'nigar.k',  avatar:'assets/demo/nigar.jpg'},
+    {id:'elvin',    name:'Elvin',    avatar:'assets/demo/elvin.jpg'},
+    {id:'gunay',    name:'Gunay',    avatar:'assets/demo/gunay.jpg'},
+    {id:'tural',    name:'Tural',    avatar:'assets/demo/tural.jpg'},
+    {id:'sevda',    name:'Sevda',    avatar:''},
+    {id:'kamran',   name:'Kamran',   avatar:''}
+  ];
+
+  const els = {
+    card: document.getElementById('card'),
+    feature: document.getElementById('feature'),
+    count: document.getElementById('count'),
+    featAva: document.getElementById('featAva'),
+    avaWrap: document.getElementById('avaWrap'),
+    welcome: document.getElementById('welcome'),
+    hint: document.getElementById('hint'),
+    row: document.getElementById('row'),
+    help: document.getElementById('help'),
+    sp: document.getElementById('sp')
+  };
+  const spx = els.sp.getContext('2d');
+
+  // members: Map id -> {id,name,avatar,t}
+  // order: newest-first ids
+  const members = new Map();
+  let order = [];
+  let featuredId = null;
+  let welcomeQ = [];
+  let welcoming = null; // {id, start, until}
+  let rotateAt = 0;
+  let lastCount = 0;
+  let countPop = 0;
+  let wsOK = false;
+  let clock = 0;
+  let readyOK = false;
+
+  const now = () => CFG.step ? clock : performance.now() / 1000;
+  const wall = () => performance.now() / 1000;
+
+  function pick(obj, keys) {
+    if (!obj || typeof obj !== 'object') return '';
+    for (const k of keys) {
+      if (obj[k] != null && obj[k] !== '') return obj[k];
+    }
+    return '';
+  }
+  function firstUrl(v) {
+    if (!v) return '';
+    if (typeof v === 'string') return v;
+    if (Array.isArray(v)) return firstUrl(v[0]);
+    if (typeof v === 'object') return firstUrl(v.url_list || v.url || v.uri || v.urls);
+    return '';
+  }
+
+  function save() {
+    if (CFG.nosave) return;
+    try {
+      const list = order.map(id => {
+        const m = members.get(id);
+        return m ? {id:m.id, name:m.name, avatar:m.avatar, t:m.t} : null;
+      }).filter(Boolean);
+      localStorage.setItem(STORE, JSON.stringify({members:list, featured:featuredId}));
+    } catch (_) {}
+  }
+  function load() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORE) || 'null');
+      if (!raw || !Array.isArray(raw.members)) return;
+      members.clear(); order = [];
+      for (const m of raw.members) {
+        if (!m || !m.id) continue;
+        const id = String(m.id);
+        if (members.has(id)) continue;
+        members.set(id, {id, name:m.name || id, avatar:m.avatar || '', t:+m.t || 0});
+        order.push(id);
+      }
+      featuredId = raw.featured && members.has(raw.featured) ? raw.featured : (order[0] || null);
+    } catch (_) {}
+  }
+
+  function avaSrc(url) {
+    return url && String(url).trim() ? String(url).trim() : DEFAULT_AV;
+  }
+  function onAvaErr(e) {
+    if (e && e.target) e.target.src = DEFAULT_AV;
+  }
+
+  function isHeartMe(d, gift, ext) {
+    const id = d.giftId ?? d.gift_id ?? gift.id ?? gift.gift_id ?? ext.id ?? ext.gift_id ?? d.id;
+    if (id != null && id !== '' && Number(id) === HEART_ID) return true;
+    if (String(id) === String(HEART_ID)) return true;
+    const name = String(d.giftName || gift.name || ext.name || d.name || d.gift_name || '').trim().toLowerCase();
+    return HEART_NAMES.has(name);
+  }
+
+  function extractUser(raw) {
+    let d = raw && typeof raw === 'object' ? raw : {};
+    if (d.data && typeof d.data === 'string') {
+      try { d = Object.assign({}, d, {data: JSON.parse(d.data)}); } catch (_) {}
+    }
+    // unwrap {event, data}
+    if (d.data && typeof d.data === 'object' && (d.event || d.type) && !d.uniqueId && !d.nickname && !d.giftName && !d.user) {
+      d = d.data;
+    }
+    const inner = (d.data && typeof d.data === 'object') ? d.data : null;
+    const user = (d.user && typeof d.user === 'object') ? d.user
+               : (inner && inner.user && typeof inner.user === 'object') ? inner.user
+               : {};
+    const idKeys = ['uniqueId','unique_id','userId','user_id','uniqueID','secUid'];
+    const nameKeys = ['nickname','nickName','name','userName','displayName','nick'];
+    const avKeys = ['profilePictureUrl','profilePicture','profile_picture_url','profilePic','avatarUrl','avatar'];
+    const uniqueId = String(pick(d, idKeys) || pick(inner, idKeys) || pick(user, idKeys) || '');
+    const nickname = String(pick(d, nameKeys) || pick(inner, nameKeys) || pick(user, nameKeys) || uniqueId);
+    const avatar = firstUrl(pick(d, avKeys) || pick(inner, avKeys) || pick(user, avKeys) || '');
+    return {d, inner, user, uniqueId, nickname, avatar};
+  }
+
+  function addMember(id, name, avatar, opts) {
+    opts = opts || {};
+    id = String(id || '').trim();
+    if (!id) return false;
+    name = String(name || id).trim() || id;
+    avatar = avatar ? String(avatar) : '';
+    const existing = members.get(id);
+    if (existing) {
+      if (name && name !== id) existing.name = name;
+      if (avatar) existing.avatar = avatar;
+      save();
+      return false;
+    }
+    const rec = {id, name, avatar, t: Date.now()};
+    members.set(id, rec);
+    order.unshift(id);
+    if (opts.silent) {
+      if (!featuredId) featuredId = id;
+      save();
+      paint();
+      return true;
+    }
+    welcomeQ.push(id);
+    save();
+    // kick immediately if idle
+    if (!welcoming) startNextWelcome();
+    else paint();
+    return true;
+  }
+
+  function startNextWelcome() {
+    while (welcomeQ.length && !members.has(welcomeQ[0])) welcomeQ.shift();
+    if (!welcomeQ.length) {
+      welcoming = null;
+      rotateAt = now() + CFG.rotate;
+      paint();
+      return;
+    }
+    const id = welcomeQ.shift();
+    featuredId = id;
+    const t0 = now();
+    welcoming = {id, start: t0, until: t0 + CFG.welcome};
+    countPop = t0;
+    paint(true);
+  }
+
+  function rotateFeatured() {
+    if (order.length < 2) return;
+    const i = Math.max(0, order.indexOf(featuredId));
+    featuredId = order[(i + 1) % order.length];
+    paint(false);
+  }
+
+  function resetAll() {
+    members.clear();
+    order = [];
+    featuredId = null;
+    welcomeQ = [];
+    welcoming = null;
+    lastCount = 0;
+    try { if (!CFG.nosave) localStorage.removeItem(STORE); } catch (_) {}
+    paint();
+  }
+
+  function seedTest(silent) {
+    // seed like the proposal: all 8 photo members, Aysel newest
+    const list = TEST.slice(0, 8);
+    // add oldest first so unshift makes Aysel newest
+    for (let i = list.length - 1; i >= 0; i--) {
+      const u = list[i];
+      addMember(u.id, u.name, u.avatar, {silent: true});
+    }
+    featuredId = 'aysel';
+    if (!silent) {
+      welcomeQ = [];
+      const t0 = now();
+      welcoming = {id: 'aysel', start: t0, until: t0 + CFG.welcome};
+    }
+    save();
+    paint(true);
+  }
+
+  let testPtr = 0;
+  function testAdd() {
+    // add next from TEST not already present, else a numbered guest
+    let pickU = TEST.find(u => !members.has(u.id));
+    if (!pickU) {
+      testPtr += 1;
+      pickU = {id: 'qonaq' + testPtr, name: 'Qonaq ' + testPtr, avatar: ''};
+    }
+    addMember(pickU.id, pickU.name, pickU.avatar);
+  }
+
+  function tick(dt) {
+    if (CFG.step) clock += dt;
+    const t = now();
+    if (welcoming && t >= welcoming.until) startNextWelcome();
+    else if (!welcoming && welcomeQ.length) startNextWelcome();
+    else if (!welcoming && CFG.rotate > 0 && order.length > 1 && t >= rotateAt) {
+      rotateFeatured();
+      rotateAt = t + CFG.rotate;
+    }
+    drawSparkles();
+    // count pop scale
+    if (countPop) {
+      const a = t - countPop;
+      if (a >= 0 && a < 0.5) {
+        const k = a < 0.18 ? 1 + 0.18 * (a / 0.18) : 1.18 - 0.18 * ((a - 0.18) / 0.32);
+        els.count.style.transform = 'scale(' + k + ')';
+      } else {
+        els.count.style.transform = '';
+        if (a >= 0.5) countPop = 0;
+      }
+    }
+    // welcome avatar pop
+    if (welcoming) {
+      const a = t - welcoming.start;
+      if (a >= 0 && a < 0.55) {
+        const k = a < 0.2 ? 0.82 + 0.26 * (a / 0.2) : 1.08 - 0.08 * ((a - 0.2) / 0.35);
+        els.avaWrap.style.transform = 'scale(' + k + ')';
+      } else {
+        els.avaWrap.style.transform = '';
+      }
+    } else {
+      els.avaWrap.style.transform = '';
+    }
+  }
+
+  function paint(welcomeKick) {
+    const n = members.size;
+    els.count.textContent = String(n);
+
+    const feat = featuredId && members.get(featuredId);
+    if (!feat) {
+      els.feature.classList.add('empty');
+      els.feature.classList.remove('welcome');
+      els.welcome.textContent = 'Hələ üzv yoxdur';
+      els.hint.textContent = 'Məni sev göndərən ilk izləyici burada görünəcək';
+      els.featAva.src = DEFAULT_AV;
+      els.row.innerHTML = '';
+      return;
+    }
+
+    els.feature.classList.remove('empty');
+    const isWelcome = !!(welcoming && welcoming.id === feat.id);
+    els.feature.classList.toggle('welcome', isWelcome);
+    els.featAva.onerror = onAvaErr;
+    els.featAva.src = avaSrc(feat.avatar);
+    els.featAva.alt = feat.name;
+    els.welcome.textContent = 'Xoş gəldin, ' + feat.name + '!';
+    els.hint.textContent = isWelcome ? 'Artıq fan klubdasın' : 'növbəti üzvlər fırlanır';
+
+    // upcoming row: next 5 after featured, wrapping
+    const upcoming = [];
+    if (order.length > 1) {
+      const i0 = Math.max(0, order.indexOf(feat.id));
+      for (let k = 1; k < order.length && upcoming.length < 5; k++) {
+        upcoming.push(order[(i0 + k) % order.length]);
+      }
+    }
+    els.row.innerHTML = '';
+    for (const id of upcoming) {
+      const m = members.get(id);
+      const img = document.createElement('img');
+      img.className = 'mini';
+      img.alt = m ? m.name : '';
+      img.src = avaSrc(m && m.avatar);
+      img.onerror = onAvaErr;
+      els.row.appendChild(img);
+    }
+
+  }
+
+  // Featured frame FX — stepped from tick() so ?step=1 recordings stay in sync
+  const STARS = [
+    {ang: 18,  r: 76, s: 4.2, kind: 'gold', spd: 16},
+    {ang: 72,  r: 80, s: 3.1, kind: 'pink', spd: 13},
+    {ang: 132, r: 77, s: 3.6, kind: 'gold', spd: 18},
+    {ang: 198, r: 81, s: 2.8, kind: 'pink', spd: 11},
+    {ang: 255, r: 75, s: 3.4, kind: 'pale', spd: 15},
+    {ang: 318, r: 83, s: 2.6, kind: 'gold', spd: 12}
+  ];
+  const BURST = [
+    {ang: 0.20, spd: 62, life: 0.62, s: 2.4, kind: 'gold'},
+    {ang: 0.85, spd: 70, life: 0.55, s: 2.0, kind: 'pink'},
+    {ang: 1.40, spd: 58, life: 0.70, s: 2.6, kind: 'gold'},
+    {ang: 2.05, spd: 76, life: 0.50, s: 1.8, kind: 'pale'},
+    {ang: 2.55, spd: 64, life: 0.64, s: 2.2, kind: 'pink'},
+    {ang: 3.15, spd: 72, life: 0.52, s: 2.0, kind: 'gold'},
+    {ang: 3.70, spd: 60, life: 0.68, s: 2.5, kind: 'pale'},
+    {ang: 4.30, spd: 78, life: 0.48, s: 1.7, kind: 'pink'},
+    {ang: 4.90, spd: 66, life: 0.60, s: 2.3, kind: 'gold'},
+    {ang: 5.50, spd: 74, life: 0.54, s: 1.9, kind: 'pink'}
+  ];
+  const COL = {gold:[245,215,130], pink:[255,150,175], pale:[255,232,200]};
+  function starPath(ctx, x, y, r, rot) {
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a = rot + i * Math.PI / 4;
+      const rad = i % 2 === 0 ? r : r * 0.38;
+      const px = x + rad * Math.cos(a), py = y + rad * Math.sin(a);
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  }
+  function drawStar(ctx, x, y, r, rot, col, a, blur) {
+    if (a <= 0.02) return;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, a));
+    ctx.fillStyle = 'rgb(' + col[0] + ',' + col[1] + ',' + col[2] + ')';
+    ctx.shadowColor = 'rgba(' + col[0] + ',' + col[1] + ',' + col[2] + ',0.85)';
+    ctx.shadowBlur = blur;
+    starPath(ctx, x, y, r, rot);
+    ctx.fill();
+    ctx.restore();
+  }
+  function drawSparkles() {
+    const ctx = spx;
+    const css = 300;
+    ctx.setTransform(els.sp.width / css, 0, 0, els.sp.height / css, 0, 0);
+    ctx.clearRect(0, 0, css, css);
+    if (!featuredId) return;
+    const t = now();
+    const isWelcome = !!(welcoming && welcoming.id === featuredId);
+    const age = isWelcome ? Math.max(0, t - welcoming.start) : 99;
+    const burstAmt = isWelcome && age < 0.85 ? Math.sin((age / 0.85) * Math.PI) : 0;
+    const appear = isWelcome ? Math.min(1, age / 0.28) : 1;
+    const cx = 150, cy = 150;
+    const ringR = 59.6;
+    const pulse = 0.70 + 0.30 * Math.sin(t * 2.05);
+    const glow = (isWelcome ? 0.24 : 0.15) * pulse + 0.38 * burstAmt;
+
+    // soft pulsing halo — tight to the ring, gold-forward
+    const glowR = 90 + 8 * burstAmt;
+    const grd = ctx.createRadialGradient(cx, cy, 52, cx, cy, glowR);
+    grd.addColorStop(0, 'rgba(232,197,107,' + (glow * 0.05) + ')');
+    grd.addColorStop(0.58, 'rgba(232,197,107,' + (glow * 0.42) + ')');
+    grd.addColorStop(0.80, 'rgba(255,170,155,' + (glow * 0.18) + ')');
+    grd.addColorStop(1, 'rgba(232,197,107,0)');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // quiet gold base ring
+    ctx.save();
+    ctx.strokeStyle = 'rgba(236,205,120,' + (0.72 + 0.18 * pulse) + ')';
+    ctx.lineWidth = 2.05;
+    ctx.beginPath();
+    ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(70,48,20,0.32)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, ringR - 2.25, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // rotating gold/pink conic shimmer
+    const spin = t * (isWelcome ? 1.05 : 0.55);
+    ctx.save();
+    ctx.translate(cx, cy);
+    const cg = ctx.createConicGradient(spin, 0, 0);
+    const hi = 0.55 + 0.45 * appear + 0.35 * burstAmt;
+    cg.addColorStop(0.00, 'rgba(255,236,180,0)');
+    cg.addColorStop(0.05, 'rgba(255,236,190,' + (0.95 * hi) + ')');
+    cg.addColorStop(0.11, 'rgba(255,170,190,' + (0.70 * hi) + ')');
+    cg.addColorStop(0.18, 'rgba(255,210,150,' + (0.18 * hi) + ')');
+    cg.addColorStop(0.28, 'rgba(255,210,150,0)');
+    cg.addColorStop(0.55, 'rgba(255,210,150,0)');
+    cg.addColorStop(0.62, 'rgba(255,220,180,' + (0.42 * hi) + ')');
+    cg.addColorStop(0.68, 'rgba(255,150,180,' + (0.38 * hi) + ')');
+    cg.addColorStop(0.78, 'rgba(255,210,150,0)');
+    cg.addColorStop(1.00, 'rgba(255,236,180,0)');
+    ctx.strokeStyle = cg;
+    ctx.lineWidth = 2.8 + 1.1 * burstAmt;
+    ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(255,210,150,' + (0.35 + 0.4 * burstAmt) + ')';
+    ctx.shadowBlur = 6 + 8 * burstAmt;
+    ctx.beginPath();
+    ctx.arc(0, 0, ringR, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // light sweep — a short specular arc traveling the ring
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(spin * 1.15);
+    ctx.strokeStyle = 'rgba(255,255,245,' + (0.55 + 0.35 * burstAmt) + ')';
+    ctx.shadowColor = 'rgba(255,245,220,0.9)';
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = 1.8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(0, 0, ringR, -0.42, 0.42);
+    ctx.stroke();
+    ctx.restore();
+
+    // orbiting sparkles
+    const starBase = isWelcome ? 0.95 : 0.48;
+    for (let i = 0; i < STARS.length; i++) {
+      const s = STARS[i];
+      const tw = 0.50 + 0.50 * Math.sin(t * 2.8 + i * 1.25);
+      const ang = (s.ang + t * s.spd + Math.sin(t * 0.7 + i) * 5) * Math.PI / 180;
+      const x = cx + s.r * Math.cos(ang);
+      const y = cy + s.r * Math.sin(ang);
+      drawStar(ctx, x, y, s.s, t * 0.5 + i, COL[s.kind], starBase * appear * tw, 6);
+    }
+
+    // welcome burst — short outward glitter
+    if (burstAmt > 0) {
+      for (let i = 0; i < BURST.length; i++) {
+        const b = BURST[i];
+        const u = Math.min(1, age / b.life);
+        if (u >= 1) continue;
+        const a0 = b.ang + 0.15 * Math.sin(welcoming.start + i);
+        const r = 58 + b.spd * u;
+        const fade = (1 - u) * burstAmt;
+        const x = cx + r * Math.cos(a0);
+        const y = cy + r * Math.sin(a0);
+        drawStar(ctx, x, y, b.s * (1.35 - 0.35 * u), t * 2 + i, COL[b.kind], Math.min(1, fade * 1.15), 8);
+      }
+    }
+  }
+
+  function onGift(raw) {
+    const {d, inner, user, uniqueId, nickname, avatar} = extractUser(raw);
+    const gift = (d.gift && typeof d.gift === 'object') ? d.gift
+               : (inner && inner.gift && typeof inner.gift === 'object') ? inner.gift
+               : {};
+    const ext = (d.extendedGiftInfo && typeof d.extendedGiftInfo === 'object') ? d.extendedGiftInfo
+              : (inner && inner.extendedGiftInfo) ? inner.extendedGiftInfo
+              : {};
+    const src = inner && (inner.giftName || inner.giftId || inner.gift) ? inner : d;
+    if (!isHeartMe(src, gift, ext) && !isHeartMe(d, gift, ext)) return;
+    const id = uniqueId || nickname;
+    if (!id) return;
+    addMember(id, nickname || id, avatar);
+  }
+
+  function onSubscribe(raw) {
+    if (!CFG.subscribe) return;
+    const {uniqueId, nickname, avatar} = extractUser(raw);
+    const id = uniqueId || nickname;
+    if (!id) return;
+    addMember(id, nickname || id, avatar);
+  }
+
+  const JOIN_EVENTS = new Set(['member','join','roomuser','room_user','like','likes','follow','share','chat','comment']);
+
+  function handleMessage(m) {
+    if (!m || typeof m !== 'object') return;
+    if (m.data && typeof m.data === 'string') {
+      try { m = Object.assign({}, m, {data: JSON.parse(m.data)}); } catch (_) {}
+    }
+    const ev = String(m.event || m.type || '').toLowerCase();
+    const payload = (m.data != null && typeof m.data === 'object') ? m.data : m;
+    if (JOIN_EVENTS.has(ev)) return;
+    if (ev === 'gift' || ev === 'gifts') onGift(payload);
+    else if (ev === 'subscribe' || ev === 'subscription' || ev === 'subscriber'
+          || ev === 'subnotify' || ev === 'sub_notify'
+          || ev === 'superfan' || ev === 'superfanjoin' || ev === 'super_fan' || ev === 'super_fan_join') {
+      onSubscribe(payload);
+    } else if (ev === '' || ev === 'event') {
+      // typeless payload: only treat as gift if it clearly is Heart Me
+      const gift = payload.gift || {};
+      if (payload.giftName || payload.giftId || gift.name || gift.id) onGift(payload);
+    }
+  }
+
+
+  const seenTs = { gift: 0, sub: 0 };
+  function handleAppPayload(p){
+    if (p && (p.type === 'alertEvent' || p.type === 'gift') && p.lastGiftEvent) {
+      const ev = p.lastGiftEvent;
+      if (ev.timestamp && ev.timestamp === seenTs.gift) return;
+      seenTs.gift = ev.timestamp || Date.now();
+      onGift({
+        event: 'gift',
+        uniqueId: ev.uniqueId,
+        nickname: ev.nickname,
+        profilePictureUrl: ev.avatarUrl,
+        giftId: ev.giftId,
+        giftName: ev.giftName,
+        diamondCount: ev.addedDiamonds || ev.diamonds
+      });
+    }
+    if (p && p.type === 'subscribeEvent' && p.lastSubscribeEvent) {
+      const ev = p.lastSubscribeEvent;
+      if (ev.timestamp && ev.timestamp === seenTs.sub) return;
+      seenTs.sub = ev.timestamp || Date.now();
+      onSubscribe({
+        event: 'subscribe',
+        uniqueId: ev.uniqueId,
+        nickname: ev.nickname,
+        profilePictureUrl: ev.avatarUrl
+      });
+      return;
+    }
+    const ev = String(p.event || p.type || '').toLowerCase();
+    if (ev && ev !== 'alertevent' && ev !== 'giftevent' && ev !== 'init' && ev !== 'state') {
+      handleMessage(p);
+    }
+  }
+
+  function onKey(e) {
+    if (e.repeat || e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+    const k = (e.key || '').toLowerCase();
+    if (k === 't') testAdd();
+    else if (k === 'r') resetAll();
+    else if (k === 'h') els.help.classList.toggle('show');
+  }
+
+  // init
+  if (CFG.reset) {
+    try { localStorage.removeItem(STORE); } catch (_) {}
+  } else if (!CFG.nosave) {
+    load();
+  }
+  if (CFG.test && members.size === 0) seedTest(false);
+  else paint();
+  rotateAt = now() + CFG.rotate;
+
+  StudioConnect.connect(handleAppPayload, { onOpen(){ wsOK = true; }, onClose(){ wsOK = false; } });
+  addEventListener('keydown', onKey);
+
+  document.fonts.ready.then(() => { readyOK = true; paint(); });
+  setTimeout(() => { readyOK = true; }, 800);
+
+  let lastTs = wall();
+  function loop() {
+    const ts = wall();
+    const dt = Math.min(0.05, Math.max(0, ts - lastTs));
+    lastTs = ts;
+    if (!CFG.step) tick(dt);
+    requestAnimationFrame(loop);
+  }
+  if (!CFG.step) requestAnimationFrame(loop);
+  else {
+    // still draw sparkles at t=0
+    drawSparkles();
+  }
+
+  window.FanKlub = {
+    add: (id, name, avatar) => addMember(id, name, avatar),
+    gift: onGift,
+    subscribe: onSubscribe,
+    reset: resetAll,
+    seed: (list, silent) => {
+      if (Array.isArray(list)) {
+        for (let i = list.length - 1; i >= 0; i--) {
+          const u = list[i];
+          addMember(u.id || u.uniqueId, u.name || u.nickname, u.avatar || u.profilePictureUrl, {silent: true});
+        }
+        featuredId = order[0] || featuredId;
+        save(); paint();
+      } else seedTest(silent !== false);
+    },
+    test: testAdd,
+    welcome: (id) => {
+      if (id && members.has(id)) {
+        welcomeQ = welcomeQ.filter(x => x !== id);
+        welcomeQ.unshift(id);
+        startNextWelcome();
+      }
+    },
+    advance: (n, dt) => {
+      n = n == null ? 1 : n;
+      dt = dt == null ? 1 / 30 : dt;
+      for (let i = 0; i < n; i++) tick(dt);
+    },
+    ready: () => readyOK && (document.fonts.status === 'loaded' || readyOK),
+    get state() {
+      return {
+        ws: wsOK,
+        count: members.size,
+        featured: featuredId,
+        welcome: welcoming && welcoming.id,
+        queue: welcomeQ.slice(),
+        order: order.slice(),
+        t: now()
+      };
+    }
+  };
+})();
+</script>
+</body>
+</html>

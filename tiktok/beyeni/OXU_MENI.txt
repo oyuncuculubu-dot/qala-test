@@ -1,38 +1,18 @@
-Bəyəni Sıralaması — canlı like liderliliyi (TikFinity / OBS)
+TikFinity AZ — Bəyəni Sıralaması
 
-QURAŞDIRMA (OBS)
-1. ZIP-i açın. "BeyeniSiralamasi" qovluğunu tam saxlayın
-   (BeyeniSiralamasi.html və "assets" qovluğu yan-yana olmalıdır).
-2. OBS → Mənbələr (Sources) → + → "Brauzer" (Browser).
-3. "Yerli fayl" (Local file) işarələyin → BeyeniSiralamasi.html seçin.
-4. En 400, Hündürlük 700, FPS 30.
-   "Mənbə görünməyəndə söndür" seçimini SÖNDÜRÜN.
-   Fon şəffaf qalır (yayımın üstündə yalnız siyahı görünür).
-5. TikFinity proqramını açıq saxlayın və LIVE-a qoşun
-   (Events API WebSocket portu: 21213, standartdır).
-   İzləyici bəyənəndə adı, şəkli və bəyəni sayı sıralamada görünür.
+TikTok LIVE Studio (Browser Source) üçün HTTPS link — localhost qəbul olunmur:
 
-TEST (yayından əvvəl yerləşdirmək üçün)
-- Brauzerdə və ya OBS Interact-də:
-  T  nümunə bəyəniləri əlavə edir
-  R  sıralamanı sıfırlayır
-  H  kömək pəncərəsini açır / bağlayır
-- Və ya faylı belə açın: BeyeniSiralamasi.html?test=1
-  (nümunə istifadəçilərlə dolu siyahı — ölçünü seçmək üçün).
+  https://oyuncuculubu-dot.github.io/qala-test/tiktok/beyeni/
 
-PARAMETRLƏR (URL sonuna əlavə edin)
-  ?test=1          nümunə siyahını göstər
-  ?reset=1         yadda saxlanan sayları sıfırla
-  ?count=9         neçə nəfər görünsün (standart: 9)
-  ?rtl=1           sağa hizalı siyahı (sağ kənar üçün)
-  ?name=yayim      bir neçə yayım üçün ayrı yaddaş
-  ?outline=1       yazıların tünd kənar kölgəsi (oxunaqlıq)
-  ?unit=1          rəqəmin yanında "bəyəni" yazısı
-  ?port=21213      TikFinity portu
-  ?size=16         şrift ölçüsü
-  ?nameColor=#3e9bde  ?pointsColor=#d4d4d4  ?rankColor=#d9d9d9
+Ölçü: 400 × 700  |  Fon şəffafdır.
 
-Sıralama avtomatik yadda qalır (OBS yenidən açılanda saylar qalır).
-Sıfırlamaq üçün ?reset=1 və ya R düyməsi.
+TikFinity AZ komputerdə açıq olmalıdır (port 4000). Vidjet yerli proqrama
+ws://127.0.0.1:4000/ws (ehtiyat: http://127.0.0.1:4000/events) üzərindən qoşulur.
 
-"Exo 2" şrifti SIL Open Font License ilə daxildir.
+Əlavə seçimlər:
+  ?host=127.0.0.1:4000
+  ?host=192.168.1.64
+  ?port=4000
+
+Əgər Studio http://127.0.0.1:4000/widgets/beyeni/ qəbul etsə, onu da istifadə
+etmək olar (localhost yox, 127.0.0.1). Tövsiyə olunan link yuxarıdakı HTTPS-dir.

@@ -170,11 +170,12 @@ body.preview #stage{
     Tövsiyə olunan ölçü: 600 × 500, FPS 30<br>
     Fon şəffafdır. “Mənbə görünməyəndə söndür” seçimini SÖNDÜRÜN.<br>
     TikTok LIVE Studio: Link olaraq GitHub Pages ünvanını yapışdırın.<br>
-    TikFinity açıq olmalıdır (ws://127.0.0.1:21213/)<br>
+    TikFinity AZ Studio açıq olmalıdır (http://localhost:4000)<br>
     Otağa giriş (member) hadisəsində ad və şəkil görünür.<br>
     URL: ?duration=3 &nbsp; ?maxqueue=10 &nbsp; ?cooldown=10 &nbsp; ?text=Xoş gəldin! &nbsp; ?port=21213 &nbsp; ?test=1
   </div>
 </div>
+<script src="studio-connect.js"></script>
 <script>
 (() => {
   'use strict';
@@ -469,17 +470,25 @@ body.preview #stage{
     if (MEMBER_EVENTS.has(ev)) onMember(payload);
   }
 
-  function connectWS() {
-    let ws;
-    try { ws = new WebSocket('ws://127.0.0.1:' + CFG.port + '/'); }
-    catch (e) { setTimeout(connectWS, 4000); return; }
-    ws.onopen = () => { wsOK = true; };
-    ws.onmessage = (e) => {
-      let m; try { m = JSON.parse(e.data); } catch (_) { return; }
-      handleMessage(m);
-    };
-    ws.onclose = () => { wsOK = false; setTimeout(connectWS, 4000); };
-    ws.onerror = () => { try { ws.close(); } catch (_) {} };
+
+  const seenTs = { member: 0 };
+  function handleAppPayload(p){
+    if (p && (p.type === 'memberJoin' || p.type === 'member') && p.lastMemberEvent) {
+      const ev = p.lastMemberEvent;
+      if (ev.timestamp && ev.timestamp === seenTs.member) return;
+      seenTs.member = ev.timestamp || Date.now();
+      onMember({
+        event: 'member',
+        uniqueId: ev.uniqueId,
+        nickname: ev.nickname,
+        profilePictureUrl: ev.avatarUrl
+      });
+      return;
+    }
+    const ev = String(p.event || p.type || '').toLowerCase();
+    if (ev && ev !== 'memberjoin' && ev !== 'init' && ev !== 'state') {
+      handleMessage(p);
+    }
   }
 
   function testAdd() {
@@ -502,7 +511,7 @@ body.preview #stage{
     enqueue(u.id, u.name, u.avatar, {force: true});
   }
 
-  if (CFG.ws) connectWS();
+  if (CFG.ws) StudioConnect.connect(handleAppPayload, { onOpen(){ wsOK = true; }, onClose(){ wsOK = false; } });
   addEventListener('keydown', onKey);
 
   document.fonts.ready.then(() => { readyOK = true; if (current) fitName(current.name); });

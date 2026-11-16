@@ -1,0 +1,12 @@
+TikFinity AZ — CatJar 7
+
+TikTok LIVE Studio (Browser Source) üçün HTTPS link — localhost qəbul olunmur:
+
+  https://oyuncuculubu-dot.github.io/qala-test/tiktok/catjar/
+
+Ölçü: 1080 × 1920  |  Fon şəffafdır.
+
+TikFinity AZ komputerdə açıq olmalıdır (port 4000). Vidjet yerli proqrama
+ws://127.0.0.1:4000/ws (ehtiyat: http://127.0.0.1:4000/events) üzərindən qoşulur.
+
+Əlavə seçimlər: ?host=127.0.0.1:4000   ?host=192.168.1.64

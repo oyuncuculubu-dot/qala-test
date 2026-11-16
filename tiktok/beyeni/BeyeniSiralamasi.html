@@ -192,10 +192,11 @@ body.rtl .row.enter{animation-name:slideInR}
   <div class="hint">
     OBS: Brauzer mənbəsi → Yerli fayl → BeyeniSiralamasi.html<br>
     Tövsiyə olunan ölçü: 400 × 700<br>
-    TikFinity açıq olmalıdır (ws://127.0.0.1:21213/)<br>
+    TikFinity AZ Studio açıq olmalıdır (http://localhost:4000)<br>
     URL: ?test=1 &nbsp; ?reset=1 &nbsp; ?count=9 &nbsp; ?rtl=1 &nbsp; ?name=yayim &nbsp; ?outline=1 &nbsp; ?unit=1
   </div>
 </div>
+<script src="studio-connect.js"></script>
 <script>
 (function(){
   const Q = new URLSearchParams(location.search);
@@ -507,25 +508,28 @@ body.rtl .row.enter{animation-name:slideInR}
     addLike(id, nickname || id, avatar, n);
   }
 
-  function connectWS(){
-    let ws;
-    try{ ws = new WebSocket('ws://127.0.0.1:' + CFG.port + '/'); }
-    catch(e){ setTimeout(connectWS, 4000); return; }
-    ws.onopen = () => { wsOK = true; };
-    ws.onmessage = (e) => {
-      let m; try{ m = JSON.parse(e.data); } catch(_){ return; }
-      if (m && m.data && typeof m.data === 'string'){
-        try{ m = Object.assign({}, m, {data: JSON.parse(m.data)}); }catch(_){}
-      }
-      const ev = String(m.event || m.type || '').toLowerCase();
-      const payload = (m.data != null && typeof m.data === 'object') ? m.data : m;
-      if (ev === 'like' || ev === 'likes') onLike(payload);
-      else if (ev === '' && (payload.likeCount != null || payload.like_count != null) && (payload.uniqueId || payload.nickname || (payload.user && (payload.user.uniqueId || payload.user.nickname)))){
-        onLike(payload);
-      }
-    };
-    ws.onclose = () => { wsOK = false; setTimeout(connectWS, 4000); };
-    ws.onerror = () => { try{ ws.close(); }catch(_){} };
+
+  const seenTs = { like: 0 };
+  function handleAppPayload(p){
+    if (p && p.type === 'likeBurst' && p.lastLikeEvent) {
+      const ev = p.lastLikeEvent;
+      if (ev.timestamp && ev.timestamp === seenTs.like) return;
+      seenTs.like = ev.timestamp || Date.now();
+      onLike({
+        event: 'like',
+        uniqueId: ev.uniqueId,
+        nickname: ev.nickname,
+        profilePictureUrl: ev.avatarUrl,
+        likeCount: ev.added || ev.likeCount || 1
+      });
+      return;
+    }
+    const ev = String(p.event || p.type || '').toLowerCase();
+    const payload = (p.data != null && typeof p.data === 'object') ? p.data : p;
+    if (ev === 'like' || ev === 'likes') onLike(payload);
+    else if (ev === '' && (payload.likeCount != null || payload.like_count != null) && (payload.uniqueId || payload.nickname || (payload.user && (payload.user.uniqueId || payload.user.nickname)))){
+      onLike(payload);
+    }
   }
 
   function onKey(e){
@@ -546,7 +550,7 @@ body.rtl .row.enter{animation-name:slideInR}
   if (CFG.test && users.size === 0) seedTest(true);
   else render();
 
-  connectWS();
+  StudioConnect.connect(handleAppPayload, { onOpen(){ wsOK = true; }, onClose(){ wsOK = false; } });
   addEventListener('keydown', onKey);
 
   window.Beyeni = {

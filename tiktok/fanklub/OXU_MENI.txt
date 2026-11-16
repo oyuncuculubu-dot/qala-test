@@ -1,0 +1,13 @@
+TikFinity AZ — Fan klub (Məni sev)
+
+TikTok LIVE Studio (Browser Source) üçün HTTPS link — localhost qəbul olunmur:
+
+  https://oyuncuculubu-dot.github.io/qala-test/tiktok/fanklub/
+
+Ölçü: 560 × 680  |  Fon şəffafdır.
+
+TikFinity AZ komputerdə açıq olmalıdır (port 4000). Vidjet yerli proqrama
+ws://127.0.0.1:4000/ws (ehtiyat: http://127.0.0.1:4000/events) üzərindən qoşulur.
+
+Heart Me hədiyyəsi (giftId 7934) və abunə hadisələri ilə işləyir.
+Əlavə seçimlər: ?host=127.0.0.1:4000   ?host=192.168.1.64
