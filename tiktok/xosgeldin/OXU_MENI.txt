@@ -1,0 +1,45 @@
+Xoş gəldin — otağa girən izləyicilər (TikFinity / OBS)
+
+QURAŞDIRMA (OBS)
+1. ZIP-i açın. "XosGeldin" qovluğunu tam saxlayın
+   (XosGeldin.html və "assets" qovluğu yan-yana olmalıdır).
+2. OBS → Mənbələr (Sources) → + → "Brauzer" (Browser).
+3. "Yerli fayl" (Local file) işarələyin → XosGeldin.html seçin.
+4. En 600, Hündürlük 500, FPS 30.
+   "Mənbə görünməyəndə söndür" seçimini SÖNDÜRÜN.
+   Fon şəffaf qalır (yayımın üstündə yalnız xoş gəldin görünür).
+   Mənbəni şəklin yuxarı orta hissəsinə yerləşdirin
+   (hədiyyə bildirişinin altında, pişiyin qulaqlarının üstündə).
+5. TikFinity proqramını açıq saxlayın və LIVE-a qoşun
+   (Events API WebSocket portu: 21213, standartdır).
+
+TİKTOK LIVE STUDIO
+Brauzer mənbəsi əvəzinə "Link" sahəsinə bu ünvanı yapışdırın:
+https://oyuncuculubu-dot.github.io/qala-test/tiktok/xosgeldin/
+Ölçü eyni qalsın: 600 × 500. TikFinity yenə açıq olmalıdır.
+
+NƏ ZAMAN İŞLƏYİR
+İzləyici otağa girəndə (TikFinity "member" hadisəsi) adı və
+profil şəkli qısa müddətə görünür: "{ad}" və "yayına qoşuldu".
+Eyni anda yalnız bir nəfər göstərilir; qalanlar növbədə gözləyir.
+Növbə uzananda bildirişlər qısalır; 10-dan (və ya ?maxqueue=)
+artıq gözləyənlərin ən köhnəsi buraxılır.
+Eyni şəxs ?cooldown= dəqiqə ərzində (standart: 10) bir daha
+göstərilmir.
+
+TEST (yayından əvvəl yerləşdirmək üçün)
+- Brauzerdə və ya OBS Interact-də:
+  T  nümunə izləyici göstərir
+  H  kömək pəncərəsini açır / bağlayır
+- Və ya faylı belə açın: XosGeldin.html?test=1
+  (nümunə bildiriş — ölçünü və yeri seçmək üçün).
+
+PARAMETRLƏR (URL sonuna əlavə edin)
+  ?duration=3      bildirişin müddəti (saniyə; standart: 3)
+  ?maxqueue=10     növbədə saxlanılan ən çox say
+  ?cooldown=10     eyni şəxsin təkrarı üçün dəqiqə
+  ?text=Xoş gəldin!   altdakı sətir (standart: yayına qoşuldu)
+  ?test=1          nümunə bildirişi göstər
+  ?port=21213      TikFinity portu
+
+"Montserrat" şrifti SIL Open Font License ilə daxildir.

@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xoş gəldin</title>
+<style>
+@font-face{
+  font-family:"Montserrat";
+  src:url("assets/Montserrat.woff2") format("woff2");
+  font-weight:100 900;
+  font-style:normal;
+  font-display:block;
+}
+:root{
+  --name:#ffffff;
+  --line:#dc9eff;
+  --ava:200px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;height:100%;
+  background:transparent;
+  overflow:hidden;
+  font-family:"Montserrat","Segoe UI","Noto Sans",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+body.has-bg{
+  background-color:var(--page-bg,#121018);
+  background-image:var(--page-bg-img,none);
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+}
+#stage{
+  width:100%;height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+body.preview #stage{
+  justify-content:flex-start;
+  padding-top:158px;
+}
+#alert{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  max-width:92%;
+  transform-origin:50% 42%;
+  will-change:transform,opacity;
+}
+.ava-box{
+  position:relative;
+  width:var(--ava);
+  height:var(--ava);
+  flex:none;
+}
+.ava-box .glow{
+  position:absolute;
+  left:50%;top:50%;
+  width:var(--ava);height:var(--ava);
+  margin:0;
+  border-radius:50%;
+  transform:translate(-50%,-50%) scale(1);
+  pointer-events:none;
+  z-index:1;
+  background:transparent;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.20),
+    0 0 12px 3px rgba(220,158,255,.28),
+    0 0 24px 8px rgba(220,158,255,.16);
+}
+.ava-box img{
+  position:relative;
+  z-index:2;
+  width:var(--ava);height:var(--ava);
+  border-radius:50%;
+  object-fit:cover;
+  object-position:center 20%;
+  display:block;
+  background:#2a2433;
+  border:2px solid rgba(255,255,255,.82);
+  box-shadow:
+    0 8px 22px rgba(0,0,0,.45),
+    0 2px 6px rgba(0,0,0,.28);
+}
+#name{
+  margin-top:14px;
+  font-weight:800;
+  font-size:72px;
+  line-height:1.05;
+  letter-spacing:-.02em;
+  color:var(--name);
+  text-align:center;
+  max-width:560px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-shadow:
+    0 1px 1px rgba(0,0,0,.45),
+    0 3px 8px rgba(0,0,0,.50),
+    0 8px 22px rgba(0,0,0,.35);
+}
+#line{
+  margin-top:6px;
+  font-weight:650;
+  font-size:36px;
+  line-height:1.15;
+  letter-spacing:.01em;
+  color:var(--line);
+  text-align:center;
+  max-width:560px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-shadow:
+    0 1px 1px rgba(0,0,0,.40),
+    0 3px 8px rgba(0,0,0,.45),
+    0 6px 16px rgba(0,0,0,.30);
+}
+#help{
+  display:none;
+  position:fixed;inset:12px auto auto 12px;
+  z-index:50;
+  width:min(400px,calc(100% - 24px));
+  background:rgba(16,14,22,.94);
+  color:#f2efe8;
+  border:1px solid rgba(255,220,170,.25);
+  border-radius:12px;
+  padding:14px 16px 16px;
+  font-family:"Montserrat","Segoe UI",sans-serif;
+  font-size:13px;
+  line-height:1.45;
+  font-weight:500;
+  box-shadow:0 12px 32px rgba(0,0,0,.4);
+  pointer-events:auto;
+}
+#help.show{display:block}
+#help h2{font-size:15px;font-weight:700;color:#ead7a4;margin-bottom:8px}
+#help kbd{
+  display:inline-block;min-width:1.3em;text-align:center;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:4px;padding:0 5px;margin-right:6px;
+  font-family:inherit;font-weight:700;font-size:12px;color:#fff;
+}
+#help .hintline{margin-top:8px;color:rgba(255,240,210,.62);font-size:12px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="alert" aria-live="polite">
+    <div class="ava-box">
+      <div class="glow" id="glow"></div>
+      <img id="ava" alt="" src="assets/avatar_default.svg">
+    </div>
+    <div id="name"></div>
+    <div id="line"></div>
+  </div>
+</div>
+<div id="help">
+  <h2>Xoş gəldin — kömək</h2>
+  <div><kbd>T</kbd> nümunə izləyici əlavə et (test)</div>
+  <div><kbd>H</kbd> bu köməyi aç / bağla</div>
+  <div class="hintline">
+    OBS: Brauzer mənbəsi → Yerli fayl → XosGeldin.html<br>
+    Tövsiyə olunan ölçü: 600 × 500, FPS 30<br>
+    Fon şəffafdır. “Mənbə görünməyəndə söndür” seçimini SÖNDÜRÜN.<br>
+    TikTok LIVE Studio: Link olaraq GitHub Pages ünvanını yapışdırın.<br>
+    TikFinity açıq olmalıdır (ws://127.0.0.1:21213/)<br>
+    Otağa giriş (member) hadisəsində ad və şəkil görünür.<br>
+    URL: ?duration=3 &nbsp; ?maxqueue=10 &nbsp; ?cooldown=10 &nbsp; ?text=Xoş gəldin! &nbsp; ?port=21213 &nbsp; ?test=1
+  </div>
+</div>
+<script>
+(() => {
+  'use strict';
+  const Q = new URLSearchParams(location.search);
+  const flag = (k, dflt) => {
+    if (!Q.has(k)) return dflt;
+    const v = String(Q.get(k)).toLowerCase();
+    return v !== '0' && v !== 'false' && v !== 'off' && v !== 'no';
+  };
+  const num = (k, dflt) => {
+    const v = parseFloat(Q.get(k));
+    return Number.isFinite(v) ? v : dflt;
+  };
+  const CFG = {
+    port: Q.get('port') || '21213',
+    test: flag('test', false),
+    step: flag('step', false),
+    ws: flag('ws', true),
+    duration: Math.min(30, Math.max(0.8, (function(){
+      let v = num('duration', 3);
+      if (v > 20) v = v / 1000;
+      return v;
+    })())),
+    maxqueue: Math.max(1, Math.round(num('maxqueue', 10))),
+    cooldown: Math.max(0, num('cooldown', 10)),
+    text: (Q.get('text') != null && String(Q.get('text')).trim() !== '')
+      ? String(Q.get('text'))
+      : 'yayına qoşuldu',
+    bg: Q.get('bg') || '',
+    bgimg: Q.get('bgimg') || '',
+    fallback: 'assets/avatar_default.svg'
+  };
+
+  if (CFG.bg) {
+    document.body.classList.add('has-bg');
+    document.body.style.setProperty('--page-bg',
+      CFG.bg[0] === '#' || CFG.bg.startsWith('rgb') ? CFG.bg : ('#' + CFG.bg));
+  }
+  if (CFG.bgimg) {
+    document.body.classList.add('has-bg', 'preview');
+    const raw = String(CFG.bgimg).replace(/["')]/g, '');
+    document.body.style.setProperty('--page-bg-img', 'url("' + raw + '")');
+  }
+
+  const DEFAULT_AV = CFG.fallback;
+  const ENTER = 0.42;
+  const EXIT = 0.36;
+  const MIN_HOLD = 0.40;
+
+  const TEST = [
+    {id:'aysel',    name:'Aysel',    avatar:'assets/demo/aysel.jpg'},
+    {id:'murad',    name:'Murad_77', avatar:'assets/demo/murad.jpg'},
+    {id:'leyla',    name:'Leyla',    avatar:'assets/demo/leyla.jpg'},
+    {id:'orxan',    name:'Orxan',    avatar:'assets/demo/orxan.jpg'},
+    {id:'nigar',    name:'nigar.k',  avatar:'assets/demo/nigar.jpg'},
+    {id:'elvin',    name:'Elvin',    avatar:'assets/demo/elvin.jpg'},
+    {id:'gunay',    name:'Gunay',    avatar:'assets/demo/gunay.jpg'},
+    {id:'tural',    name:'Tural',    avatar:'assets/demo/tural.jpg'}
+  ];
+
+  const els = {
+    alert: document.getElementById('alert'),
+    ava: document.getElementById('ava'),
+    glow: document.getElementById('glow'),
+    name: document.getElementById('name'),
+    line: document.getElementById('line'),
+    help: document.getElementById('help')
+  };
+
+  const queue = [];
+  const seen = new Map();
+  let current = null;
+  let clock = 0;
+  let wsOK = false;
+  let readyOK = false;
+  let testPtr = 0;
+
+  const now = () => CFG.step ? clock : performance.now() / 1000;
+  const wall = () => performance.now() / 1000;
+
+  function easeOutBack(u) {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(u - 1, 3) + c1 * Math.pow(u - 1, 2);
+  }
+  function easeInCubic(u) { return u * u * u; }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  function pick(obj, keys) {
+    if (!obj || typeof obj !== 'object') return '';
+    for (const k of keys) {
+      if (obj[k] != null && String(obj[k]).trim() !== '') return obj[k];
+    }
+    return '';
+  }
+  function firstUrl(v) {
+    if (!v) return '';
+    if (typeof v === 'string') return v.trim();
+    if (Array.isArray(v) && v.length) return firstUrl(v[0]);
+    if (typeof v === 'object') return firstUrl(v.url || v.uri || v.href || '');
+    return '';
+  }
+  function avaOf(url) {
+    return url && String(url).trim() ? String(url).trim() : DEFAULT_AV;
+  }
+  function onAvaErr(e) {
+    if (e && e.target && e.target.src && !e.target.src.endsWith('avatar_default.svg')) {
+      e.target.src = DEFAULT_AV;
+    }
+  }
+  els.ava.addEventListener('error', onAvaErr);
+
+  function extractUser(raw) {
+    let d = raw && typeof raw === 'object' ? raw : {};
+    if (d.data && typeof d.data === 'string') {
+      try { d = Object.assign({}, d, {data: JSON.parse(d.data)}); } catch (_) {}
+    }
+    if (d.data && typeof d.data === 'object' && (d.event || d.type) && !d.uniqueId && !d.nickname && !d.user) {
+      d = d.data;
+    }
+    const inner = (d.data && typeof d.data === 'object') ? d.data : null;
+    const user = (d.user && typeof d.user === 'object') ? d.user
+               : (inner && inner.user && typeof inner.user === 'object') ? inner.user
+               : {};
+    const idKeys = ['uniqueId','unique_id','userId','user_id','uniqueID','secUid'];
+    const nameKeys = ['nickname','nickName','name','userName','displayName','nick'];
+    const avKeys = ['profilePictureUrl','profilePicture','profile_picture_url','profilePic','avatarUrl','avatar'];
+    const uniqueId = String(pick(d, idKeys) || pick(inner, idKeys) || pick(user, idKeys) || '');
+    const nickname = String(pick(d, nameKeys) || pick(inner, nameKeys) || pick(user, nameKeys) || uniqueId);
+    const avatar = firstUrl(pick(d, avKeys) || pick(inner, avKeys) || pick(user, avKeys) || '');
+    return {d, inner, user, uniqueId, nickname, avatar};
+  }
+
+  function targetDuration() {
+    const n = queue.length;
+    const d = CFG.duration;
+    if (n >= 8) return Math.max(ENTER + MIN_HOLD + EXIT, d * 0.38);
+    if (n >= 5) return Math.max(ENTER + MIN_HOLD + EXIT, d * 0.48);
+    if (n >= 3) return Math.max(ENTER + MIN_HOLD + EXIT, d * 0.62);
+    if (n >= 2) return Math.max(ENTER + MIN_HOLD + EXIT, d * 0.75);
+    if (n >= 1) return Math.max(ENTER + MIN_HOLD + EXIT, d * 0.88);
+    return d;
+  }
+
+  function compress() {
+    while (queue.length > CFG.maxqueue) queue.shift();
+    if (!current || current.phase === 'exit') return;
+    const t = now();
+    const d = targetDuration();
+    const enterLeft = current.phase === 'enter' ? Math.max(0, ENTER - (t - current.start)) : 0;
+    const minUntil = t + enterLeft + MIN_HOLD + EXIT;
+    current.until = Math.max(minUntil, Math.min(current.until, current.start + d));
+    const span = current.until - current.start;
+    current.exitAt = current.until - Math.min(EXIT, Math.max(0.25, span * 0.28));
+  }
+
+  function inCooldown(id) {
+    if (!id || CFG.cooldown <= 0) return false;
+    const last = seen.get(id);
+    if (last == null) return false;
+    return (now() - last) < CFG.cooldown * 60;
+  }
+
+  function enqueue(id, name, avatar, opts) {
+    opts = opts || {};
+    id = String(id || '').trim();
+    if (!id) return false;
+    name = String(name || id).trim() || id;
+    avatar = avatar ? String(avatar) : '';
+    if (!opts.force && inCooldown(id)) return false;
+    if (current && current.id === id) return false;
+    if (queue.some(q => q.id === id)) return false;
+    seen.set(id, now());
+    queue.push({id, name, avatar});
+    compress();
+    if (!current) startNext();
+    return true;
+  }
+
+  function fitName(text) {
+    const el = els.name;
+    el.textContent = text;
+    el.style.fontSize = '72px';
+    const max = 560;
+    let size = 72;
+    while (size > 42 && el.scrollWidth > max) {
+      size -= 2;
+      el.style.fontSize = size + 'px';
+    }
+  }
+
+  function showUser(u) {
+    els.ava.src = avaOf(u.avatar);
+    fitName(u.name);
+    els.line.textContent = CFG.text;
+    els.alert.style.display = 'flex';
+  }
+
+  function hideAlert() {
+    els.alert.style.display = 'none';
+    els.alert.style.opacity = '0';
+    els.glow.style.opacity = '0';
+  }
+
+  function startNext() {
+    if (current) return;
+    if (!queue.length) { hideAlert(); return; }
+    const u = queue.shift();
+    const t0 = now();
+    const d = targetDuration();
+    const until = t0 + d;
+    const exitAt = until - Math.min(EXIT, Math.max(0.25, d * 0.28));
+    current = {id: u.id, name: u.name, avatar: u.avatar, start: t0, until, exitAt, phase: 'enter'};
+    showUser(u);
+    paint(0);
+  }
+
+  function paint(tAbs) {
+    if (!current) { hideAlert(); return; }
+    const t = (tAbs != null ? tAbs : now()) - current.start;
+    const exitLen = Math.max(0.2, current.until - current.exitAt);
+    let phase, u, scale, opacity, glowOp, glowSc;
+
+    if (t < ENTER) {
+      phase = 'enter';
+      u = clamp(t / ENTER, 0, 1);
+      const e = easeOutBack(u);
+      scale = 0.84 + 0.16 * e;
+      opacity = clamp(u / 0.55, 0, 1);
+      glowOp = clamp((u - 0.15) / 0.6, 0, 1);
+      glowSc = 0.92 + 0.16 * e;
+    } else if ((tAbs != null ? tAbs : now()) < current.exitAt) {
+      phase = 'hold';
+      const holdT = t - ENTER;
+      scale = 1;
+      opacity = 1;
+      const pulse = 0.5 + 0.5 * Math.sin(holdT * 1.8);
+      glowOp = 0.55 + 0.30 * pulse;
+      glowSc = 1.02 + 0.05 * pulse;
+    } else {
+      phase = 'exit';
+      u = clamp(((tAbs != null ? tAbs : now()) - current.exitAt) / exitLen, 0, 1);
+      const e = easeInCubic(u);
+      scale = 1 - 0.10 * e;
+      opacity = 1 - e;
+      glowOp = (1 - e) * 0.7;
+      glowSc = 1.06 + 0.08 * e;
+    }
+    current.phase = phase;
+    els.alert.style.opacity = String(opacity);
+    els.alert.style.transform = 'scale(' + scale + ')';
+    els.glow.style.opacity = String(glowOp);
+    els.glow.style.transform = 'translate(-50%,-50%) scale(' + glowSc + ')';
+  }
+
+  function tick(dt) {
+    if (CFG.step) clock += dt;
+    const t = now();
+    if (current && t >= current.until) {
+      current = null;
+      if (queue.length) startNext();
+      else hideAlert();
+    } else if (!current && queue.length) {
+      startNext();
+    }
+    if (current) paint(t);
+  }
+
+  const MEMBER_EVENTS = new Set(['member','join','roomuser','room_user']);
+
+  function eventName(m) {
+    const top = String(m.event || m.type || m.eventName || m.eventType || '').toLowerCase();
+    if (top) return top;
+    const inner = (m.data && typeof m.data === 'object') ? m.data : null;
+    if (inner) return String(inner.event || inner.type || inner.eventName || '').toLowerCase();
+    return '';
+  }
+
+  function onMember(raw) {
+    const {uniqueId, nickname, avatar} = extractUser(raw);
+    const id = uniqueId || nickname;
+    if (!id) return;
+    enqueue(id, nickname || id, avatar);
+  }
+
+  function handleMessage(m) {
+    if (!m || typeof m !== 'object') return;
+    if (m.data && typeof m.data === 'string') {
+      try { m = Object.assign({}, m, {data: JSON.parse(m.data)}); } catch (_) {}
+    }
+    const ev = eventName(m);
+    const payload = (m.data != null && typeof m.data === 'object') ? m.data : m;
+    if (MEMBER_EVENTS.has(ev)) onMember(payload);
+  }
+
+  function connectWS() {
+    let ws;
+    try { ws = new WebSocket('ws://127.0.0.1:' + CFG.port + '/'); }
+    catch (e) { setTimeout(connectWS, 4000); return; }
+    ws.onopen = () => { wsOK = true; };
+    ws.onmessage = (e) => {
+      let m; try { m = JSON.parse(e.data); } catch (_) { return; }
+      handleMessage(m);
+    };
+    ws.onclose = () => { wsOK = false; setTimeout(connectWS, 4000); };
+    ws.onerror = () => { try { ws.close(); } catch (_) {} };
+  }
+
+  function testAdd() {
+    const u = TEST[testPtr % TEST.length];
+    testPtr += 1;
+    enqueue(u.id, u.name, u.avatar, {force: true});
+  }
+
+  function onKey(e) {
+    if (e.repeat || e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+    const k = (e.key || '').toLowerCase();
+    if (k === 't') testAdd();
+    else if (k === 'h') els.help.classList.toggle('show');
+  }
+
+  if (CFG.test) {
+    const u = TEST[0];
+    enqueue(u.id, u.name, u.avatar, {force: true});
+  }
+
+  if (CFG.ws) connectWS();
+  addEventListener('keydown', onKey);
+
+  document.fonts.ready.then(() => { readyOK = true; if (current) fitName(current.name); });
+  setTimeout(() => { readyOK = true; }, 800);
+
+  let lastTs = wall();
+  function loop() {
+    const ts = wall();
+    const dt = Math.min(0.05, Math.max(0, ts - lastTs));
+    lastTs = ts;
+    if (!CFG.step) tick(dt);
+    requestAnimationFrame(loop);
+  }
+  if (!CFG.step) requestAnimationFrame(loop);
+
+  window.XosGeldin = {
+    add: (id, name, avatar) => enqueue(id, name, avatar, {force: true}),
+    member: onMember,
+    handle: handleMessage,
+    enqueue: (id, name, avatar) => enqueue(id, name, avatar),
+    test: testAdd,
+    advance: (n, dt) => {
+      n = n == null ? 1 : n;
+      dt = dt == null ? 1 / 30 : dt;
+      for (let i = 0; i < n; i++) tick(dt);
+    },
+    ready: () => readyOK,
+    get state() {
+      return {
+        ws: wsOK,
+        current: current && current.id,
+        phase: current && current.phase,
+        queue: queue.map(q => q.id),
+        qlen: queue.length,
+        t: now()
+      };
+    }
+  };
+})();
+</script>
+</body>
+</html>
