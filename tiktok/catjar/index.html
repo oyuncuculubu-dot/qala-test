@@ -10,10 +10,11 @@ video{position:absolute;left:-9999px;top:0;width:8px;height:8px;opacity:0;pointe
 </style></head>
 <body><canvas id="c"></canvas><div id="hint"></div>
 <script src="studio-connect.js"></script>
+<script src="../gifts/catalog.js"></script>
 <script>
 /* CatJar 7 — photoreal cat (video sprites, VP9 alpha WebM) + TikTok LIVE gift jar for TikFinity / OBS
    • Gifts: TikFinity AZ Studio SSE /events (http://localhost:4000)  (+ CatJar5 SSE /events & /api/state when served over http)
-   • Gift art: official TikTok gift images (live: giftPictureUrl / giftId cache; offline: bundled assets/gifts from p16-webcast.tiktokcdn.com)
+   • Gift art: full current AZ catalog (webcast/gift/list aid=1988 priority_region=AZ, Euler-cross-checked) bundled as ../gifts/icons/{id}.webp; fallback: event giftPictureUrl, then a gift box — never a blank
    • Gift alert: large upper-center avatar in a gold animated frame, gift image + "{ad} {hədiyyə} atdı" (queued; streaks bump ×N; then the gift flies to the cat)
    • Test:  ?test=1  → auto gifts.  Keys: G gift · B big gift · C Orxan Tac · S streak · F almost full · R reset · T auto-test · H help
    • Reset saved jar: ?reset=1  or key R.   Other params: ?id=name ?capacity=0.7 ?min=1 ?fulltext=... ?align=left|right ?port=21213
@@ -36,57 +37,105 @@ const bez=(p,c,q,k)=>({x:(1-k)*(1-k)*p.x+2*(1-k)*k*c.x+k*k*q.x,y:(1-k)*(1-k)*p.y
 const eio=k=>k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2,eo=k=>1-Math.pow(1-k,3);
 const eob=k=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(k-1,3)+c1*Math.pow(k-1,2)};
 const fmt=n=>Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
-/* ---------- gifts (official TikTok artwork, bundled from p16-webcast.tiktokcdn.com) ---------- */
-const GIFT_CATALOG=[
-  {name:'Rose',id:5655,dia:1,file:'assets/gifts/rose.png'},
-  {name:'TikTok',id:5269,dia:1,file:'assets/gifts/tiktok.png'},
-  {name:'Heart Me',id:7934,dia:1,file:'assets/gifts/heart_me.png'},
-  {name:'Finger Heart',id:5487,dia:5,file:'assets/gifts/finger_heart.png'},
-  {name:'GG',id:6064,dia:1,file:'assets/gifts/gg.png'},
-  {name:'Ice Cream Cone',id:5827,dia:1,file:'assets/gifts/icecream.png'},
-  {name:'Doughnut',id:5879,dia:30,file:'assets/gifts/doughnut.png'},
-  {name:'Perfume',id:5658,dia:20,file:'assets/gifts/perfume.png'},
-  {name:'Hand Heart',id:5660,dia:100,file:'assets/gifts/hand_hearts.png'},
-  {name:'Confetti',id:5585,dia:100,file:'assets/gifts/confetti.png'},
-  {name:'Corgi',id:6267,dia:299,file:'assets/gifts/corgi.png'},
-  {name:'Money Gun',id:7168,dia:500,file:'assets/gifts/money_gun.png'},
-  {name:'Galaxy',id:11046,dia:1000,file:'assets/gifts/galaxy.png'},
-  {name:'Tsar',id:5524,dia:100,file:'assets/gifts/tsar.png'},
-  {name:'Lion',id:6369,dia:29999,file:'assets/gifts/lion.png'},
-  {name:'TikTok Universe',id:9072,dia:44999,file:'assets/gifts/universe.png'},
-  {name:'Little Crown',id:6097,dia:99,file:'assets/gifts/little_crown.png'},
-  {name:'Love You',id:6890,dia:1,file:'assets/gifts/love_you.png'}
-];
-const GIFT_BY_NAME=new Map(),GIFT_BY_ID=new Map();
+/* ---------- gifts: full current TikTok AZ catalog (official CDN icons, bundled) ---------- */
+const GIFT_ICON_DIR='../gifts/icons/';
+const GIFT_BOX='../gifts/box.png';
+function giftLocalFile(g){
+  if(!g)return '';
+  if(g.file)return g.file;
+  if(g.id!=null&&g.id!=='')return GIFT_ICON_DIR+g.id+'.webp';
+  return '';
+}
+const GIFT_CATALOG=(window.TT_AZ_GIFTS||[]).map(g=>({
+  name:g.name,az:g.az||'',id:g.id,dia:g.dia,cdn:g.cdn||'',file:giftLocalFile(g)
+}));
+for(const g of (window.TT_AZ_GIFT_EXTRAS||[])){
+  GIFT_CATALOG.push({name:g.name,az:g.az||'',id:g.id,dia:g.dia,cdn:g.cdn||'',file:g.file||giftLocalFile(g),extra:true});
+}
+const GIFT_BY_NAME=new Map(),GIFT_BY_ID=new Map(),GIFT_NAME_ALL=new Map();
 const GIFT_ALIAS={'hand hearts':'hand heart','hearts':'hand heart','tac':'tsar','çar':'tsar',
   'universe':'tiktok universe','kainat':'tiktok universe','ice cream':'ice cream cone','dondurma':'ice cream cone',
-  'donut':'doughnut','gül':'rose','şir':'lion','qalaktika':'galaxy','little crown':'little crown','kiçik tac':'little crown'};
-function normGift(n){return (n||'').trim().toLowerCase()}
-function findGift(name,id){if(id!=null&&id!==''&&GIFT_BY_ID.has(String(id)))return GIFT_BY_ID.get(String(id));const k=normGift(name);if(GIFT_BY_NAME.has(k))return GIFT_BY_NAME.get(k);if(GIFT_ALIAS[k]&&GIFT_BY_NAME.has(GIFT_ALIAS[k]))return GIFT_BY_NAME.get(GIFT_ALIAS[k]);return null}
-for(const g of GIFT_CATALOG){GIFT_BY_NAME.set(normGift(g.name),g);if(g.id!=null)GIFT_BY_ID.set(String(g.id),g)}
-function asEvent(g){return {giftName:g.name,giftId:g.id,diamondCount:g.dia,giftPictureUrl:g.file}}
-const TEST_GIFTS=GIFT_CATALOG.filter(g=>g.dia<=100).map(asEvent);
-const CROWN_GIFT=asEvent(GIFT_BY_NAME.get('tsar'));
-const BIG_GIFTS=GIFT_CATALOG.filter(g=>g.dia>=199).map(asEvent);
+  'donut':'doughnut','gül':'rose','qızılgül':'rose','şir':'lion','qalaktika':'galaxy','little crown':'little crown','kiçik tac':'little crown',
+  'dələ':'squirrel','dele':'squirrel','dəle':'squirrel','dela':'squirrel','dalə':'squirrel',
+  'pişik':'cat','pisik':'cat','pisi':'cat','pisiq':'cat','pişi':'cat','kedisi':'cat','kedi':'cat'};
+function normGift(n){return (n||'').trim().toLowerCase().replace(/\s+/g,' ')}
+function addNameKey(k,g){
+  if(!k)return;
+  if(!GIFT_NAME_ALL.has(k))GIFT_NAME_ALL.set(k,[]);
+  const arr=GIFT_NAME_ALL.get(k);
+  if(!arr.includes(g))arr.push(g);
+  arr.sort((a,b)=>(a.dia||0)-(b.dia||0));
+  if(!GIFT_BY_NAME.has(k) || ((GIFT_BY_NAME.get(k).dia||0)>(g.dia||0))) GIFT_BY_NAME.set(k,arr[0]);
+}
+for(const g of GIFT_CATALOG){
+  if(g.id!=null&&g.id!=='')GIFT_BY_ID.set(String(g.id),g);
+  addNameKey(normGift(g.name),g);
+  addNameKey(normGift(g.az),g);
+}
+function findGift(name,id,dia){
+  if(id!=null&&id!==''&&GIFT_BY_ID.has(String(id)))return GIFT_BY_ID.get(String(id));
+  const k=normGift(name);
+  const pick=cands=>{
+    if(!cands||!cands.length)return null;
+    if(dia!=null&&dia!==''){
+      const n=Number(dia);
+      const m=cands.find(g=>Number(g.dia)===n);
+      if(m)return m;
+    }
+    return cands[0];
+  };
+  let hit=pick(GIFT_NAME_ALL.get(k));
+  if(hit)return hit;
+  if(GIFT_ALIAS[k]){
+    hit=pick(GIFT_NAME_ALL.get(normGift(GIFT_ALIAS[k])));
+    if(hit)return hit;
+    if(GIFT_BY_NAME.has(GIFT_ALIAS[k]))return GIFT_BY_NAME.get(GIFT_ALIAS[k]);
+  }
+  return null;
+}
+function asEvent(g){return {giftName:g.az||g.name,giftId:g.id,diamondCount:g.dia,giftPictureUrl:g.file}}
+const DEMO_IDS=[5655,5269,7934,5487,6064,5827,5879,5658,5660,5585,6267,7168,11046,5524,6097,6890,12920,1213439,12725];
+const GIFT_DEMO=DEMO_IDS.map(id=>GIFT_BY_ID.get(String(id))).filter(Boolean);
+for(const g of GIFT_CATALOG){if(g.extra&&!GIFT_DEMO.includes(g))GIFT_DEMO.push(g)}
+const TEST_GIFTS=GIFT_DEMO.filter(g=>g.dia<=199).map(asEvent);
+const CROWN_GIFT=asEvent(GIFT_BY_ID.get('5524')||GIFT_BY_NAME.get('tsar')||GIFT_DEMO[0]);
+const BIG_GIFTS=GIFT_DEMO.filter(g=>g.dia>=199).map(asEvent);
 let giftIdCache={};
 try{if(!CFG.nosave)giftIdCache=JSON.parse(localStorage.getItem(CFG.key+'_giftimg')||'{}')||{}}catch(_){}
 function rememberGift(id,url){if(id==null||id===''||!url)return;giftIdCache[String(id)]=url;if(CFG.nosave)return;try{localStorage.setItem(CFG.key+'_giftimg',JSON.stringify(giftIdCache))}catch(_){}}
-function resolveArt(name,id,url){
-  const loc=findGift(name,id);
+function artCandidates(name,id,url,dia){
+  const out=[],seen=new Set();
+  const add=u=>{if(u&&!seen.has(u)){seen.add(u);out.push(u)}};
+  const loc=findGift(name,id,dia);
   const remote=url&&/^https?:/i.test(url)?url:'';
-  if(remote){rememberGift(id,remote);getImg(remote)}
-  if(loc){getImg(loc.file);return loc.file}
-  if(id!=null&&id!==''&&giftIdCache[String(id)]){const u=giftIdCache[String(id)];getImg(u);return u}
-  if(remote)return remote;
-  return ''
+  if(remote)rememberGift(id,remote);
+  if(loc){add(loc.file);add(loc.cdn)}
+  if(id!=null&&id!==''&&giftIdCache[String(id)])add(giftIdCache[String(id)]);
+  add(remote);
+  add(GIFT_BOX);
+  return out;
+}
+function resolveArt(name,id,url,dia){
+  const c=artCandidates(name,id,url,dia);
+  for(const u of c) getImg(u);
+  return c[0]||GIFT_BOX;
 }
 const NICKS=['Aysel','Murad_77','nigar.k','Orxan','Leyla','Elvin','Gunay','Tural','Sevda','Kamran'];
 const AVATARS={Aysel:'assets/demo/aysel.jpg',Murad_77:'assets/demo/murad.jpg',Leyla:'assets/demo/leyla.jpg',Orxan:'assets/demo/orxan.jpg','nigar.k':'assets/demo/nigar.jpg',Gunay:'assets/demo/gunay.jpg',Tural:'assets/demo/tural.jpg',Elvin:'assets/demo/elvin.jpg'};
-const AZ_GIFT={rose:'Gül','ice cream cone':'Dondurma','ice cream':'Dondurma',perfume:'Ətir',doughnut:'Donut',donut:'Donut',
-  'hand heart':'Ürəklər','hand hearts':'Ürəklər',heart:'Ürək',hearts:'Ürəklər','heart me':'Məni sev','finger heart':'Barmaq ürək',
-  lion:'Şir',tsar:'Tac','little crown':'Kiçik tac',galaxy:'Qalaktika',universe:'Kainat',
-  'tiktok universe':'Kainat',tiktok:'TikTok',confetti:'Konfeti',corgi:'Corgi','money gun':'Pul tapançası','love you':'Səni sevirəm',gg:'GG'};
-function giftAz(n){const s=(n||'').trim(),k=s.toLowerCase();if(AZ_GIFT[k])return AZ_GIFT[k];if(GIFT_ALIAS[k]&&AZ_GIFT[GIFT_ALIAS[k]])return AZ_GIFT[GIFT_ALIAS[k]];if(/\btsar\b|\btac\b/.test(k))return'Tac';if(/\blion\b/.test(k))return'Şir';if(/\brose\b/.test(k))return'Gül';if(/\bgalaxy\b/.test(k))return'Qalaktika';if(/\buniverse\b/.test(k))return'Kainat';if(/heart me/.test(k))return'Məni sev';if(/finger heart|barmaq/.test(k))return'Barmaq ürək';if(/money gun|pul tapança/.test(k))return'Pul tapançası';if(/confetti/.test(k))return'Konfeti';if(/\bheart/.test(k))return'Ürək';return s||'Hədiyyə'}
+function giftAz(n,id,dia){
+  const g=findGift(n,id,dia);
+  if(g&&g.az)return g.az;
+  const s=(n||'').trim(),k=normGift(s);
+  if(GIFT_ALIAS[k]){
+    const alt=findGift(GIFT_ALIAS[k],id,dia);
+    if(alt&&alt.az)return alt.az;
+  }
+  if(/dələ|dele|squirrel/.test(k))return'Dələ';
+  if(/pişik|pisik|\bcat\b/.test(k))return'Pişik';
+  if(g&&g.name)return g.name;
+  return s||'Hədiyyə';
+}
+
 function giftTier(d){d=+d||0;return d>=5000?3:d>=100?2:d>=20?1:0}
 const imgCache=new Map();
 function getImg(url){if(!url)return null;let o=imgCache.get(url);
@@ -315,7 +364,7 @@ function onGiftEvent(raw){
   const list=o=>{if(!o)return '';if(typeof o==='string')return o;if(Array.isArray(o))return o[0]||'';return o.url_list&&o.url_list[0]||o.url||o.uri||''};
   const evUrl=d.giftPictureUrl||d.giftImage||d.giftPicture||d.pictureUrl||d.gift_picture_url||d.gift_image
     ||list(d.image)||list(gift.image)||list(gift.icon)||list(ext.image)||list(ext.icon)||'';
-  const url=resolveArt(name,giftId,evUrl);
+  const url=resolveArt(name,giftId,evUrl,d.diamondCount||d.addedDiamonds);
   const nick=d.nickname||d.uniqueId||d.userName||user.nickname||user.uniqueId||user.userName||'';
   const avatar=d.profilePictureUrl||d.profilePicture||d.profilePic||d.avatarUrl||d.avatar||d.profile_picture_url
     ||user.profilePictureUrl||user.profilePicture||user.avatarUrl||user.avatar||user.profile_picture||AVATARS[nick]||'';
@@ -505,7 +554,7 @@ function drawAlert(){
   drawGiftArt(AL.url,AL.icon,gSize/2,AL.name,AL.id);
   ctx.restore();
 
-  const nick=AL.nick||'',az=giftAz(AL.name),parts=[nick,az,'atdı'];
+  const nick=AL.nick||'',az=giftAz(AL.name,AL.id,AL.dia),parts=[nick,az,'atdı'];
   const cols=['#fff8ee','#ffe08a','#fff8ee'];
   ctx.font='800 46px '+AL_FONT;ctx.textAlign='left';ctx.textBaseline='middle';
   const gap=12;let tw=0;const widths=parts.map((w,i)=>{const m=ctx.measureText(w).width;tw+=m+(i?gap:0);return m});
@@ -602,10 +651,28 @@ function updMode(dt){
 }
 
 /* ---------- drawing ---------- */
+function drawGiftBox(r){
+  const s=r*1.15;
+  ctx.save();
+  ctx.fillStyle='#e23d5c';
+  ctx.beginPath();ctx.roundRect(-s,-s*0.85,s*2,s*1.85,s*0.22);ctx.fill();
+  ctx.fillStyle='#ffd24a';
+  ctx.fillRect(-s*0.16,-s*0.85,s*0.32,s*1.85);
+  ctx.fillStyle='#d42e51';
+  ctx.beginPath();ctx.roundRect(-s*1.05,-s*1.05,s*2.1,s*0.55,s*0.16);ctx.fill();
+  ctx.fillStyle='#ffd24a';
+  ctx.fillRect(-s*1.05,-s*0.88,s*2.1,s*0.22);
+  ctx.beginPath();ctx.ellipse(-s*0.28,-s*1.18,s*0.32,s*0.22, -0.4,0,7);ctx.fill();
+  ctx.beginPath();ctx.ellipse(s*0.28,-s*1.18,s*0.32,s*0.22, 0.4,0,7);ctx.fill();
+  ctx.beginPath();ctx.arc(0,-s*1.05,s*0.16,0,7);ctx.fill();
+  ctx.restore();
+}
 function drawGiftArt(url,icon,r,name,id){
-  let o=url?getImg(url):null;
-  if(!(o&&o.ok)){const loc=findGift(name,id);if(loc&&loc.file!==url)o=getImg(loc.file)}
-  if(o&&o.ok&&!o.bad){try{const iw=o.img.naturalWidth||1,ih=o.img.naturalHeight||1,s=r*2.3,sc=s/Math.max(iw,ih);ctx.drawImage(o.img,-iw*sc/2,-ih*sc/2,iw*sc,ih*sc)}catch(_){o.bad=true}}
+  const cands=artCandidates(name,id,url);
+  let o=null;
+  for(const u of cands){const x=getImg(u);if(x&&x.ok&&!x.bad){o=x;break}}
+  if(o&&o.ok&&!o.bad){try{const iw=o.img.naturalWidth||1,ih=o.img.naturalHeight||1,s=r*2.3,sc=s/Math.max(iw,ih);ctx.drawImage(o.img,-iw*sc/2,-ih*sc/2,iw*sc,ih*sc);return}catch(_){if(o)o.bad=true}}
+  drawGiftBox(r);
 }
 function drawItem(it){ctx.save();ctx.translate(it.x,it.y);
   if(it.em){const k=clamp((it.em.t-it.em.d)/(it.em.dur+0.35),0,1);ctx.globalAlpha=1-k*0.5;const sc=1-k*0.45;ctx.scale(sc,sc)}
@@ -668,7 +735,7 @@ function testGift(big,kind){
   g.nickname=nick;g.uniqueId=nick;g.profilePictureUrl=AVATARS[nick]||'';g.repeatCount=1;g.giftType=0;onGiftEvent(g)
 }
 function testTick(dt){test.t-=dt;if(test.t<=0){test.t=R(2.4,4);testGift(rnd()<0.08)}}
-function fillTo(f){const pool=GIFT_CATALOG.filter(g=>g.dia<5000);let guard=0;while(fillFrac()<f&&guard++<300){const g=pool[(rnd()*pool.length)|0];const it=newItem(JX+R(-95,95),JAR.sh+R(0,160),radiusFor(g.dia),{url:g.file,name:g.name,id:g.id},0,0,R(0,6));it.landed=true;items.push(it);coins+=g.dia;getImg(g.file);for(let k=0;k<80;k++)step(SUB)}for(let k=0;k<700;k++)step(SUB);items.forEach(i=>i.landed=true);dirty=true}
+function fillTo(f){const pool=GIFT_DEMO.filter(g=>g.dia<5000);let guard=0;while(fillFrac()<f&&guard++<300){const g=pool[(rnd()*pool.length)|0];const it=newItem(JX+R(-95,95),JAR.sh+R(0,160),radiusFor(g.dia),{url:g.file,name:g.name,id:g.id},0,0,R(0,6));it.landed=true;items.push(it);coins+=g.dia;getImg(g.file);for(let k=0;k<80;k++)step(SUB)}for(let k=0;k<700;k++)step(SUB);items.forEach(i=>i.landed=true);dirty=true}
 const hint=document.getElementById('hint');
 hint.textContent='CatJar 7 — test\nG  hədiyyə        B  böyük hədiyyə\nC  Orxan Tac      S  seriya (5 gül)\nF  bankanı az qala doldur\nR  sıfırla         T  avto-test aç/bağla\nH  bu yazını gizlət';
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();
@@ -682,7 +749,7 @@ window.CatJar={_dbg:()=>({items:items.map(i=>[Math.round(i.x),Math.round(i.y),i.
   crown:()=>testGift(true,'crown'),state:()=>({items:items.length,fill:fillFrac(),coins,jars,mode,queue:queue.length,busy:!!D,ws:wsOK,clip:P.cur&&P.cur.name,t:P.t,alert:AL&&{nick:AL.nick,name:AL.name,units:AL.units,dia:AL.dia,age:+AL.age.toFixed(2),hold:+AL.hold.toFixed(2),life:+AL.life.toFixed(2)},vids:Object.values(CLIP).map(c=>c.ok?1:c.bad?-1:0).join('')}),
   advance:async(n,dt)=>{for(let i=0;i<n;i++)update(dt||1/30);await syncVideos();render()},
   ready:()=>imgOK>=2&&Object.values(CLIP).every(c=>c.ok&&c.v.readyState>=2)&&[...imgCache.values()].every(o=>o.ok||o.bad),
-  preload:()=>{GIFT_CATALOG.forEach(g=>getImg(g.file));Object.values(AVATARS).forEach(u=>getImg(u))}};
+  preload:()=>{GIFT_DEMO.forEach(g=>{getImg(g.file);if(g.cdn)getImg(g.cdn)});getImg(GIFT_BOX);Object.values(AVATARS).forEach(u=>getImg(u))}};
 load();for(let k=0;k<240;k++)step(SUB);
 if(CFG.step){startClip('idle');render()}else requestAnimationFrame(loop);
 })();
