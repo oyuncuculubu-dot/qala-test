@@ -73,9 +73,11 @@ try{if(!CFG.nosave)giftIdCache=JSON.parse(localStorage.getItem(CFG.key+'_giftimg
 function rememberGift(id,url){if(id==null||id===''||!url)return;giftIdCache[String(id)]=url;if(CFG.nosave)return;try{localStorage.setItem(CFG.key+'_giftimg',JSON.stringify(giftIdCache))}catch(_){}}
 function resolveArt(name,id,url){
   const loc=findGift(name,id);
-  if(url){rememberGift(id,url);getImg(url);if(loc)getImg(loc.file);return url}
-  if(id!=null&&id!==''&&giftIdCache[String(id)]){const u=giftIdCache[String(id)];getImg(u);return u}
+  const remote=url&&/^https?:/i.test(url)?url:'';
+  if(remote){rememberGift(id,remote);getImg(remote)}
   if(loc){getImg(loc.file);return loc.file}
+  if(id!=null&&id!==''&&giftIdCache[String(id)]){const u=giftIdCache[String(id)];getImg(u);return u}
+  if(remote)return remote;
   return ''
 }
 const NICKS=['Aysel','Murad_77','nigar.k','Orxan','Leyla','Elvin','Gunay','Tural','Sevda','Kamran'];
@@ -88,7 +90,14 @@ function giftAz(n){const s=(n||'').trim(),k=s.toLowerCase();if(AZ_GIFT[k])return
 function giftTier(d){d=+d||0;return d>=5000?3:d>=100?2:d>=20?1:0}
 const imgCache=new Map();
 function getImg(url){if(!url)return null;let o=imgCache.get(url);
-  if(!o){o={img:new Image(),ok:false,bad:false};o.img.onload=()=>{o.ok=true};o.img.onerror=()=>{o.bad=true};o.img.src=url;imgCache.set(url,o)}return o}
+  if(!o){
+    o={img:new Image(),ok:false,bad:false};
+    const remote=/^https?:/i.test(url)&&!/^(https?:\/\/)?(localhost|127\.0\.0\.1)\b/i.test(url)&&url.indexOf(location.origin)!==0;
+    if(remote)o.img.crossOrigin='anonymous';
+    o.img.onload=()=>{o.ok=true};
+    o.img.onerror=()=>{o.bad=true};
+    o.img.src=url;imgCache.set(url,o)
+  }return o}
 function mk(sz,f){const c=document.createElement('canvas');c.width=c.height=sz;const g=c.getContext('2d');g.translate(sz/2,sz/2);f(g,sz/2);return c}
 function gloss(g,r){const gr=g.createRadialGradient(-r*.35,-r*.45,1,-r*.2,-r*.3,r*.9);gr.addColorStop(0,'rgba(255,255,255,.75)');gr.addColorStop(.25,'rgba(255,255,255,.18)');gr.addColorStop(1,'rgba(255,255,255,0)');return gr}
 function heartPath(s){const p=new Path2D();p.moveTo(0,s*.75);p.bezierCurveTo(-s*1.25,-s*.05,-s*.75,-s*1,0,-s*.42);p.bezierCurveTo(s*.75,-s*1,s*1.25,-s*.05,0,s*.75);return p}
@@ -310,13 +319,14 @@ function onGiftEvent(raw){
   const nick=d.nickname||d.uniqueId||d.userName||user.nickname||user.uniqueId||user.userName||'';
   const avatar=d.profilePictureUrl||d.profilePicture||d.profilePic||d.avatarUrl||d.avatar||d.profile_picture_url
     ||user.profilePictureUrl||user.profilePicture||user.avatarUrl||user.avatar||user.profile_picture||AVATARS[nick]||'';
-  const streakable=d.giftType===1||d.isStreak===true||typeof d.comboTotal==='number';
+  const hasRepeat=d.repeatCount!=null&&d.repeatCount!=='';
+  const streakable=d.giftType===1||d.isStreak===true||typeof d.comboTotal==='number'||hasRepeat;
   let units=1;
-  if(streakable){
+  if(streakable&&hasRepeat){
     if(typeof d.comboTotal==='number')units=Math.max(0,+d.repeatCount||0);
     else{const key=(d.userId||d.uniqueId||nick)+'|'+(d.giftId||name),rc=Math.max(1,+d.repeatCount||1),st=streaks.get(key),last=st?st.n:0;
-      units=rc>last?rc-last:(rc<last?rc:0);if(d.repeatEnd)streaks.delete(key);else streaks.set(key,{n:rc,t:Date.now()})}
-  }else units=Math.max(1,+d.repeatCount||1);
+      units=rc>last?rc-last:(rc<last?1:0);if(d.repeatEnd)streaks.delete(key);else streaks.set(key,{n:rc,t:Date.now()})}
+  }else units=Math.max(1,hasRepeat?+d.repeatCount||1:1);
   if(units<=0||dia*units<CFG.minCoins)return;
   const g={name,dia,url,nick,avatar,units,id:giftId,key:nick+'|'+(giftId||name)};
   if(D&&D.g&&D.g.key===g.key){
@@ -380,7 +390,7 @@ function drawAlertAvatar(url,r){
   ctx.fillStyle='#1a1520';ctx.fill();
   ctx.save();ctx.clip();
   const o=url&&getImg(url);
-  if(o&&o.ok){const iw=o.img.naturalWidth||1,ih=o.img.naturalHeight||1,s=r*2/Math.min(iw,ih),dw=iw*s,dh=ih*s;ctx.drawImage(o.img,-dw/2,-dh/2-dh*0.04,dw,dh)}
+  if(o&&o.ok&&!o.bad){try{const iw=o.img.naturalWidth||1,ih=o.img.naturalHeight||1,s=r*2/Math.min(iw,ih),dw=iw*s,dh=ih*s;ctx.drawImage(o.img,-dw/2,-dh/2-dh*0.04,dw,dh)}catch(_){o.bad=true;ctx.drawImage(ICON.sil,-r,-r,r*2,r*2)}}
   else ctx.drawImage(ICON.sil,-r,-r,r*2,r*2);
   const vg=ctx.createRadialGradient(0,r*0.35,r*0.2,0,0,r);
   vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.22)');
@@ -516,27 +526,54 @@ function drawAlert(){
 }
 let wsOK=false;
 let lastGiftTs=0;
+function giftFromAppEvent(ev){
+  if(!ev)return null;
+  const added=Number(ev.addedDiamonds);
+  // lastGiftEvent.diamonds is the sender's cumulative total — never use it as this gift's value.
+  const dia=(Number.isFinite(added)&&added>0)?added:(Number(ev.diamondCount)||1);
+  const pic=ev.giftPictureUrl||ev.giftImage||ev.pictureUrl||'';
+  return{
+    event:'gift',
+    uniqueId:ev.uniqueId,
+    nickname:ev.nickname,
+    profilePictureUrl:ev.avatarUrl,
+    avatarUrl:ev.avatarUrl,
+    giftName:ev.giftName,
+    giftId:ev.giftId,
+    diamondCount:dia,
+    giftPictureUrl:pic||undefined,
+    repeatCount:ev.repeatCount,
+    repeatEnd:ev.repeatEnd,
+    giftType:ev.giftType,
+    isStreak:ev.isStreak,
+    timestamp:ev.timestamp,
+    msgId:ev.msgId||(('gift:'+(ev.uniqueId||'')+':'+(ev.giftId||ev.giftName||'')+':'+(ev.timestamp||'')))
+  };
+}
 function handlePayload(p){if(!p)return;
-  if(p.lastGiftEvent&&(p.type==='alertEvent'||p.type==='gift')){
-    const ev=p.lastGiftEvent;if(ev.timestamp&&ev.timestamp===lastGiftTs)return;lastGiftTs=ev.timestamp||Date.now();
-    onGiftEvent({event:'gift',uniqueId:ev.uniqueId,nickname:ev.nickname,profilePictureUrl:ev.avatarUrl,giftName:ev.giftName,giftId:ev.giftId,diamondCount:ev.addedDiamonds||ev.diamonds,giftPictureUrl:ev.giftPictureUrl});
+  const typ=String(p.type||p.event||'').toLowerCase();
+  if(p.lastGiftEvent&&(typ==='alertevent'||typ==='gift'||typ==='giftevent')){
+    const ev=p.lastGiftEvent;
+    const sig=[ev.timestamp,ev.uniqueId,ev.giftId,ev.repeatCount,ev.repeatEnd].join('|');
+    if(ev.timestamp&&sig===String(lastGiftTs))return;
+    lastGiftTs=sig;
+    onGiftEvent(giftFromAppEvent(ev));
     return;
   }
+  if(typ&&typ!=='gift'&&typ!=='gifts')return;
   let list=[];if(Array.isArray(p))list=p;else if(Array.isArray(p.events))list=p.events;else if(Array.isArray(p.gifts))list=p.gifts;else if(p.state&&(p.state.events||p.state.gifts))list=p.state.events||p.state.gifts;else list=[p];
   for(const r of list){const t=String(r.type||r.event||'').toLowerCase();if(t==='gift'||t==='gifts')onGiftEvent(r)}
 }
 function handleCatjarMessage(p){
   if(!p)return;
   handlePayload(p);
-  const ev=String(p.event||p.type||'').toLowerCase();
-  if(ev==='gift')onGiftEvent(p.data||p);
 }
 if(!CFG.step){
   const _sc=StudioConnect.connect(handleCatjarMessage,{onOpen(){wsOK=true},onClose(){wsOK=false}});
   let first=true;
   const api=(_sc.target&&_sc.target.http)||'';
-  const poll=async()=>{try{const r=await fetch(api+'/api/state',{cache:'no-store'});if(r.ok){const j=await r.json();if(first){first=false;const l=Array.isArray(j)?j:(j.events||j.gifts||[]);l.forEach(e=>{const d=e.data||e;if(d.msgId)seen.add(d.msgId+'|'+d.repeatCount)})}else handlePayload(j)}}catch(_){}};
-  poll();setInterval(poll,2500);
+  const poll=async()=>{try{const r=await fetch(api+'/api/state',{cache:'no-store'});if(r.ok){const j=await r.json();if(first){first=false;const l=Array.isArray(j)?j:(j.events||j.gifts||j.recentEvents||[]);l.forEach(e=>{const d=e.data||e;if(d.msgId)seen.add(d.msgId+'|'+d.repeatCount)})}}}catch(_){}};
+  poll();
 }
 addEventListener('message',e=>{const m=e.data;if(m&&typeof m==='object'&&(m.event==='gift'||m.type==='gift'))onGiftEvent(m.data||m)});
 function fillFrac(){let a=0;for(const i of items)if(!i.em)a+=Math.PI*i.r*i.r;return a/(capArea*CFG.capacity)}
@@ -568,7 +605,7 @@ function updMode(dt){
 function drawGiftArt(url,icon,r,name,id){
   let o=url?getImg(url):null;
   if(!(o&&o.ok)){const loc=findGift(name,id);if(loc&&loc.file!==url)o=getImg(loc.file)}
-  if(o&&o.ok){const iw=o.img.naturalWidth||1,ih=o.img.naturalHeight||1,s=r*2.3,sc=s/Math.max(iw,ih);ctx.drawImage(o.img,-iw*sc/2,-ih*sc/2,iw*sc,ih*sc)}
+  if(o&&o.ok&&!o.bad){try{const iw=o.img.naturalWidth||1,ih=o.img.naturalHeight||1,s=r*2.3,sc=s/Math.max(iw,ih);ctx.drawImage(o.img,-iw*sc/2,-ih*sc/2,iw*sc,ih*sc)}catch(_){o.bad=true}}
 }
 function drawItem(it){ctx.save();ctx.translate(it.x,it.y);
   if(it.em){const k=clamp((it.em.t-it.em.d)/(it.em.dur+0.35),0,1);ctx.globalAlpha=1-k*0.5;const sc=1-k*0.45;ctx.scale(sc,sc)}
@@ -621,7 +658,7 @@ function update(dt){T+=dt;updPlayer(dt);
   saveT+=dt;if(saveT>1.5){saveT=0;if(dirty){dirty=false;save()}}
   if(test.on)testTick(dt)}
 let last=performance.now();
-function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;update(dt);render();requestAnimationFrame(loop)}
+function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;try{update(dt);render()}catch(_){ }requestAnimationFrame(loop)}
 /* ---------- test mode ---------- */
 const test={on:CFG.test,t:1};
 function testGift(big,kind){
