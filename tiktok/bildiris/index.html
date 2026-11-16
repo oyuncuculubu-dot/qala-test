@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="utf-8">
+  <title>GameCamp — Bildirişlər</title>
+  <style>
+    html,body{margin:0;padding:0;background:transparent;overflow:hidden;font-family:Inter,system-ui,sans-serif;color:#fff;}
+    body.bg{background:#14141a;min-height:100vh;}
+    .stage{position:fixed;left:50%;bottom:48px;transform:translateX(-50%);width:min(640px,92vw);pointer-events:none;}
+    .card{display:none;background:linear-gradient(180deg,#1c1c22,#16161c);border:1px solid #d53559;border-radius:16px;padding:16px 18px 16px 16px;box-shadow:0 16px 50px #0008;align-items:center;gap:14px;}
+    .card.on{display:flex;animation:in .28s ease;}
+    @keyframes in{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+    .av{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#d53559,#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;overflow:hidden;flex:none;box-shadow:0 0 0 3px #d5355944;}
+    .av img{width:100%;height:100%;object-fit:cover;}
+    .k{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#d53559;font-weight:700;}
+    .n{font-size:22px;font-weight:750;line-height:1.15;margin-top:2px;}
+    .m{font-size:15px;color:#d4d4da;margin-top:3px;}
+    .hint{position:fixed;left:16px;bottom:12px;color:#9aa;font-size:12px;display:none;}
+    body.bg .hint{display:block;}
+  </style>
+<script src="studio-connect.js"></script>
+</head>
+<body>
+  <div class="stage"><div class="card" id="card">
+    <div class="av" id="av">G</div>
+    <div>
+      <div class="k" id="k">Bildiriş</div>
+      <div class="n" id="n"></div>
+      <div class="m" id="m"></div>
+    </div>
+  </div></div>
+  <div class="hint">GameCamp açıq olmalıdır (ws://127.0.0.1:4000/ws)</div>
+  <script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    if (q.get('bg') === '1') document.body.classList.add('bg');
+    var host = q.get('host') || '127.0.0.1:4000';
+    var alerts = { gift:true, like:false, follow:true, join:true, minDiamonds:1, duration:5,
+      giftText:'{ad} {hədiyyə} göndərdi', followText:'{ad} izləməyə başladı', joinText:'Xoş gəldin, {ad}!' };
+    var seen = {}, armed = false, hideT = 0;
+    var LABELS = { gift:'Hədiyyə', like:'Bəyəni', follow:'İzləmə', member:'Qoşulma', heartme:'Heart Me' };
+    function fmt(tpl, ev) {
+      var name = ev.nickname || ev.handle || ev.uniqueId || 'İzləyici';
+      var gift = ev.giftName || ev.gift || '';
+      return String(tpl||'{ad}').replace(/\{ad\}/g,name).replace(/\{hədiyyə\}|\{hediyye\}/g, gift||'hədiyyə');
+    }
+    function show(kind, ev, text) {
+      var card = document.getElementById('card');
+      document.getElementById('k').textContent = LABELS[kind] || 'Bildiriş';
+      document.getElementById('n').textContent = ev.nickname || ev.handle || '';
+      document.getElementById('m').textContent = text || '';
+      var av = document.getElementById('av');
+      if (ev.avatarUrl) av.innerHTML = '<img src="'+ev.avatarUrl+'" alt="">';
+      else av.textContent = String(ev.nickname||'G').replace(/^@/,'').charAt(0).toUpperCase();
+      card.classList.add('on');
+      clearTimeout(hideT);
+      hideT = setTimeout(function(){ card.classList.remove('on'); }, Math.max(1, Number(alerts.duration)||5)*1000);
+    }
+    function kindOf(ev) {
+      var t = ev.type || '';
+      if (ev.giftName === 'Heart Me' || ev.giftId === 7934 || ev.giftId === '7934') return 'heartme';
+      if (t==='gift'||t==='alertEvent'||ev.diamondCount||ev.diamonds) return 'gift';
+      if (t==='like') return 'like';
+      if (t==='follow') return 'follow';
+      if (t==='member'||t==='memberJoin') return 'member';
+      return t;
+    }
+    function key(ev){ return ev.id || [ev.type, ev.timestamp||ev.time||'', ev.uniqueId||ev.nickname||'', ev.giftName||ev.detail||''].join('|'); }
+    function val(ev,k){ if(k==='gift'||k==='heartme') return Number(ev.diamondCount||ev.diamonds||1)||1; if(k==='like') return Number(ev.likeCount||ev.likes||0)||0; return 0; }
+    function ingest(state){
+      if (!state) return;
+      if (state.config && state.config.gamecamp && state.config.gamecamp.alerts) {
+        alerts = Object.assign(alerts, state.config.gamecamp.alerts);
+      }
+      var evs = (state.recentEvents||[]).slice();
+      if (state.lastGiftEvent) evs.push(Object.assign({type:'gift'}, state.lastGiftEvent));
+      if (state.lastLikeEvent) evs.push(Object.assign({type:'like'}, state.lastLikeEvent));
+      if (state.lastMemberEvent) evs.push(Object.assign({type:'member'}, state.lastMemberEvent));
+      if (!armed) { evs.forEach(function(e){ var k=key(e); if(k) seen[k]=1; }); armed=true; return; }
+      evs.forEach(function(ev){
+        var k = key(ev); if(!k||seen[k]) return; seen[k]=1;
+        var kind = kindOf(ev);
+        var ok = (kind==='gift'&&alerts.gift&&val(ev,kind)>=(Number(alerts.minDiamonds)||0))
+          || (kind==='heartme'&&alerts.gift)
+          || (kind==='like'&&alerts.like)
+          || (kind==='follow'&&alerts.follow)
+          || (kind==='member'&&alerts.join);
+        if (!ok) return;
+        var tpl = kind==='follow'?alerts.followText: kind==='member'?alerts.joinText: kind==='like'?'{ad} bəyəni göndərdi':alerts.giftText;
+        show(kind, ev, fmt(tpl, ev));
+      });
+    }
+    var proto = location.protocol==='https:' ? 'wss:' : 'ws:';
+    var url = (host.indexOf('://')>=0?host:(proto+'//'+host)) ;
+    if (url.indexOf('/ws')<0) url = url.replace(/\/$/,'')+'/ws';
+    function hook(ws){
+      ws.onmessage=function(e){ try{ ingest(JSON.parse(e.data)); }catch(_){} };
+      ws.onclose=function(){ setTimeout(connect, 2000); };
+    }
+    function connect(){
+      try { hook(new WebSocket(url)); } catch(_){ setTimeout(connect, 2000); }
+    }
+    connect();
+    try {
+      var es = new EventSource((location.protocol==='http:'||host.indexOf('127.')===0)? ('http://'+(host.replace(/^https?:\/\//,''))+'/events') : '/events');
+      es.onmessage=function(e){ try{ ingest(JSON.parse(e.data)); }catch(_){} };
+    } catch(_){}
+  })();
+  </script>
+</body>
+</html>
