@@ -122,6 +122,239 @@ body.preview #stage{
     0 3px 8px rgba(0,0,0,.45),
     0 6px 16px rgba(0,0,0,.30);
 }
+
+/* ===== Style variants (?style=a|b|c). Without ?style the original look stays. ===== */
+@property --ang{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes xg-spin{to{--ang:360deg}}
+@keyframes xg-sheen{0%{transform:translateX(-120%) skewX(-18deg)}100%{transform:translateX(320%) skewX(-18deg)}}
+body:not([data-style]) .card,
+body:not([data-style]) .txt,
+body:not([data-style]) .ring,
+body:not([data-style]) .sheen{display:contents}
+body:not([data-style]) .ring,body:not([data-style]) .sheen{display:none}
+body[data-style] #alert{transform-origin:50% 50%}
+body[data-style] .ava-box,
+body[data-style] #name,
+body[data-style] #line{will-change:transform,opacity}
+body[data-style] .ava-box{
+  opacity:var(--a1,1);
+  transform:scale(calc(.72 + .28 * var(--a1b,1)));
+}
+body[data-style] #name{
+  opacity:var(--a2,1);
+  transform:translateY(calc((1 - var(--a2,1)) * 18px));
+}
+body[data-style] #line{
+  opacity:var(--a3,1);
+  transform:translateY(calc((1 - var(--a3,1)) * 14px));
+}
+.ring{
+  position:absolute;
+  inset:calc(var(--ring-gap) * -1);
+  border-radius:50%;
+  z-index:1;
+  pointer-events:none;
+  background:conic-gradient(from var(--ang),
+    rgba(220,158,255,0) 0deg, rgba(220,158,255,.95) 70deg, #fff 120deg,
+    rgba(255,140,200,.95) 170deg, rgba(255,140,200,0) 240deg,
+    rgba(220,158,255,0) 360deg);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--ring-w) - .5px),#000 calc(100% - var(--ring-w)));
+          mask:radial-gradient(farthest-side,transparent calc(100% - var(--ring-w) - .5px),#000 calc(100% - var(--ring-w)));
+  animation:xg-spin 4.5s linear infinite;
+}
+.ring::after{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  box-shadow:inset 0 0 0 var(--ring-w) rgba(255,255,255,.10);
+}
+
+/* ---------- A: Zərif halo (refined original) ---------- */
+body[data-style="a"]{--ava:172px;--ring-gap:9px;--ring-w:2.5px}
+body[data-style="a"] .ava-box .glow{
+  width:calc(var(--ava) * 1.7);height:calc(var(--ava) * 1.7);
+  box-shadow:none;z-index:0;
+  background:radial-gradient(closest-side,rgba(220,158,255,.30),rgba(220,158,255,.10) 55%,rgba(220,158,255,0) 100%);
+}
+body[data-style="a"] .ava-box img{
+  border:3px solid rgba(255,255,255,.92);
+  box-shadow:0 10px 26px rgba(0,0,0,.50),0 2px 6px rgba(0,0,0,.30);
+}
+body[data-style="a"] #name{margin-top:22px;font-size:64px;letter-spacing:-.025em}
+body[data-style="a"] #line{
+  margin-top:8px;font-size:30px;font-weight:600;letter-spacing:.02em;
+  display:flex;align-items:center;justify-content:center;gap:14px;overflow:visible;
+}
+body[data-style="a"] #line::before,
+body[data-style="a"] #line::after{
+  content:"";width:38px;height:2px;border-radius:2px;flex:none;
+  background:linear-gradient(90deg,rgba(220,158,255,0),rgba(220,158,255,.9));
+  box-shadow:0 1px 4px rgba(0,0,0,.35);
+}
+body[data-style="a"] #line::after{transform:scaleX(-1)}
+
+/* ---------- B: Şüşə kart (FanKlub "Məni sev" family) ---------- */
+body[data-style="b"]{--ava:128px;--ring-gap:8px;--ring-w:2px}
+body[data-style="b"] .card{
+  position:relative;
+  display:flex;flex-direction:column;align-items:center;
+  width:372px;max-width:100%;
+  padding:30px 26px 26px;
+  border-radius:30px;
+  background:rgba(20,16,28,.50);
+  -webkit-backdrop-filter:blur(18px) saturate(1.2);
+          backdrop-filter:blur(18px) saturate(1.2);
+  box-shadow:0 0 40px rgba(220,120,255,.12),0 14px 36px rgba(0,0,0,.30);
+  opacity:var(--a0,1);
+  transform:translateY(calc((1 - var(--a0,1)) * 26px)) scale(calc(.96 + .04 * var(--a0,1)));
+}
+body[data-style="b"] .card::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;
+  background:conic-gradient(from var(--ang),
+    rgba(255,210,190,.28) 0deg, rgba(220,158,255,.95) 60deg, rgba(255,255,255,.95) 95deg,
+    rgba(255,140,190,.9) 130deg, rgba(255,210,190,.28) 200deg, rgba(255,210,190,.28) 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  animation:xg-spin 6s linear infinite;
+}
+body[data-style="b"] .card::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,245,230,.08),transparent 28%,transparent 72%,rgba(0,0,0,.10));
+  box-shadow:inset 0 1px 0 rgba(255,230,210,.16);
+}
+body[data-style="b"] .ava-box .glow{
+  width:calc(var(--ava) * 1.6);height:calc(var(--ava) * 1.6);box-shadow:none;z-index:0;
+  background:radial-gradient(closest-side,rgba(220,158,255,.26),rgba(220,158,255,0));
+}
+body[data-style="b"] .ava-box img{border:2px solid rgba(255,255,255,.85);box-shadow:0 6px 16px rgba(0,0,0,.38)}
+body[data-style="b"] .txt{display:flex;flex-direction:column;align-items:center;width:100%}
+body[data-style="b"] #name{margin-top:20px;font-size:50px;max-width:100%;letter-spacing:-.02em;
+  text-shadow:0 1px 2px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35)}
+body[data-style="b"] #line{
+  margin-top:12px;font-size:22px;font-weight:600;letter-spacing:.02em;color:#f3dcff;
+  padding:7px 18px 8px;border-radius:999px;
+  background:linear-gradient(90deg,rgba(220,158,255,.22),rgba(255,140,190,.22));
+  border:1px solid rgba(220,158,255,.38);
+  text-shadow:0 1px 3px rgba(0,0,0,.45);
+}
+body[data-style="b"] .sheen{display:none}
+
+/* ---------- C: Banner (horizontal glass alert) ---------- */
+body[data-style="c"]{--ava:104px;--ring-gap:6px;--ring-w:2px}
+body[data-style="c"] .card{
+  position:relative;
+  display:flex;flex-direction:row;align-items:center;gap:22px;
+  max-width:96%;
+  padding:14px 38px 14px 14px;
+  border-radius:999px;
+  overflow:hidden;
+  background:linear-gradient(90deg,rgba(26,18,36,.62),rgba(20,16,28,.46));
+  -webkit-backdrop-filter:blur(16px) saturate(1.2);
+          backdrop-filter:blur(16px) saturate(1.2);
+  box-shadow:0 0 34px rgba(220,120,255,.14),0 12px 30px rgba(0,0,0,.32);
+  clip-path:inset(0 calc((1 - var(--a0,1)) * 78%) 0 0 round 999px);
+  opacity:calc(.2 + .8 * var(--a0,1));
+}
+body[data-style="c"] .card::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;z-index:3;
+  background:conic-gradient(from var(--ang),
+    rgba(255,210,190,.26) 0deg, rgba(220,158,255,.95) 50deg, rgba(255,255,255,.9) 80deg,
+    rgba(255,140,190,.85) 110deg, rgba(255,210,190,.26) 170deg, rgba(255,210,190,.26) 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  animation:xg-spin 6s linear infinite;
+}
+body[data-style="c"] .sheen{
+  position:absolute;top:0;bottom:0;left:0;width:28%;z-index:2;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent);
+  transform:translateX(-120%) skewX(-18deg);
+}
+body[data-style="c"] .sheen.go{animation:xg-sheen 1.1s cubic-bezier(.4,0,.2,1) .35s 1 both}
+body[data-style="c"] .ava-box{transform-origin:50% 50%}
+body[data-style="c"] .ava-box .glow{display:none}
+body[data-style="c"] .ava-box img{border:2px solid rgba(255,255,255,.88);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+body[data-style="c"] .txt{display:flex;flex-direction:column;align-items:flex-start;min-width:0;position:relative;z-index:2}
+body[data-style="c"] #line{order:-1;margin:0 0 2px;font-size:21px;font-weight:650;letter-spacing:.05em;text-align:left;
+  color:#e2b4ff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+body[data-style="c"] #name{margin:0;font-size:46px;text-align:left;max-width:380px;letter-spacing:-.02em;
+  text-shadow:0 1px 2px rgba(0,0,0,.45),0 4px 12px rgba(0,0,0,.35)}
+body[data-style="c"] #name{transform:translateX(calc((1 - var(--a2,1)) * -22px))}
+body[data-style="c"] #line{transform:translateX(calc((1 - var(--a3,1)) * -22px))}
+
+/* ---------- shared for D/E/F: neutralise A/B/C stagger defaults ---------- */
+body[data-style="d"] .ring,body[data-style="e"] .ring,body[data-style="f"] .ring{display:none}
+body[data-style="d"] .ava-box .glow,body[data-style="f"] .ava-box .glow{display:none}
+body[data-style="d"] .sheen,body[data-style="f"] .sheen{display:block}
+
+/* ---------- D: TikTok LIVE native entry bar ---------- */
+body[data-style="d"] #stage{align-items:flex-start;padding-left:18px}
+body[data-style="d"]{--ava:82px}
+body[data-style="d"] .card{
+  position:relative;display:flex;align-items:center;gap:14px;
+  min-width:440px;max-width:570px;
+  padding:9px 84px 9px 9px;border-radius:999px;overflow:hidden;
+  background:linear-gradient(90deg,rgba(254,44,85,.96) 0%,rgba(254,44,85,.78) 38%,rgba(254,44,85,.30) 78%,rgba(254,44,85,0) 100%);
+  transform:translateX(calc((1 - var(--a0,1)) * -115%));
+}
+body[data-style="d"] .card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px;
+  background:#25F4EE;box-shadow:0 0 10px rgba(37,244,238,.8);z-index:3;
+}
+body[data-style="d"] .sheen{position:absolute;top:0;bottom:0;left:0;width:30%;z-index:2;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);transform:translateX(-120%) skewX(-18deg)}
+body[data-style="d"] .sheen.go{animation:xg-sheen 1.0s cubic-bezier(.4,0,.2,1) .55s 1 both}
+body[data-style="d"] .ava-box{transform:none;opacity:1;position:relative;z-index:3}
+body[data-style="d"] .ava-box img{border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+body[data-style="d"] .txt{display:flex;flex-direction:column;align-items:flex-start;min-width:0;position:relative;z-index:3}
+body[data-style="d"] #name{margin:0;font-size:40px;font-weight:800;text-align:left;letter-spacing:-.01em;
+  text-shadow:0 1px 3px rgba(0,0,0,.35);transform:translateX(calc((1 - var(--a2,1)) * 26px))}
+body[data-style="d"] #line{margin:1px 0 0;font-size:24px;font-weight:600;color:rgba(255,255,255,.92);text-align:left;
+  text-shadow:0 1px 3px rgba(0,0,0,.35);transform:translateX(calc((1 - var(--a3,1)) * 26px))}
+
+/* ---------- E: StreamElements-style bold alert with confetti ---------- */
+body[data-style="e"]{--ava:150px}
+body[data-style="e"] #fx{display:block}
+body[data-style="e"] .ava-box .glow{width:calc(var(--ava)*1.9);height:calc(var(--ava)*1.9);box-shadow:none;z-index:0;
+  background:radial-gradient(closest-side,rgba(255,200,70,.38),rgba(255,120,80,.12) 55%,rgba(255,120,80,0))}
+body[data-style="e"] .ava-box img{border:4px solid #FFD34E;
+  box-shadow:0 0 0 3px rgba(0,0,0,.35),0 0 26px rgba(255,190,60,.55),0 10px 24px rgba(0,0,0,.45)}
+body[data-style="e"] .txt{display:flex;flex-direction:column;align-items:center}
+body[data-style="e"] #line{order:-1;margin-top:18px;font-size:62px;font-weight:900;letter-spacing:-.01em;overflow:visible;
+  color:#FFD34E;transform:none;opacity:1;text-shadow:none}
+body[data-style="e"] #line .ch{display:inline-block;white-space:pre;
+  background:linear-gradient(180deg,#FFF3B0 0%,#FFD34E 45%,#FF9A2E 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 0 rgba(120,40,0,.55)) drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+body[data-style="e"] #name{margin-top:4px;font-size:44px;font-weight:800;color:#fff;
+  text-shadow:0 2px 0 rgba(0,0,0,.35),0 6px 16px rgba(0,0,0,.5)}
+#fx{display:none;position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#alert{position:relative;z-index:1}
+
+/* ---------- F: minimal gold nameplate lower-third ---------- */
+body[data-style="f"]{--ava:100px}
+body[data-style="f"] .card{
+  position:relative;display:flex;align-items:center;gap:20px;
+  padding:16px 34px 16px 16px;border-radius:6px;overflow:hidden;
+  background:linear-gradient(90deg,rgba(10,9,12,.86),rgba(18,15,12,.74));
+  box-shadow:0 0 30px rgba(232,197,107,.10),0 12px 28px rgba(0,0,0,.40);
+  clip-path:inset(0 calc((1 - var(--a0,1)) * 100%) 0 0);
+}
+body[data-style="f"] .card::before,body[data-style="f"] .card::after{
+  content:"";position:absolute;left:0;right:0;height:1.5px;z-index:3;transform-origin:0 50%;
+  transform:scaleX(var(--a0,1));
+  background:linear-gradient(90deg,rgba(232,197,107,0),#F5D78A 18%,#E8C56B 70%,rgba(232,197,107,0));
+  box-shadow:0 0 8px rgba(245,215,138,.7);
+}
+body[data-style="f"] .card::before{top:0}
+body[data-style="f"] .card::after{bottom:0}
+body[data-style="f"] .sheen{position:absolute;top:0;bottom:0;left:0;width:22%;z-index:2;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(245,215,138,.10),transparent);transform:translateX(-120%) skewX(-18deg)}
+body[data-style="f"] .sheen.go{animation:xg-sheen 1.4s cubic-bezier(.4,0,.2,1) .6s 1 both}
+body[data-style="f"] .ava-box{transform:scale(calc(.85 + .15 * var(--a1,1)))}
+body[data-style="f"] .ava-box img{border:2px solid #E8C56B;box-shadow:0 0 0 3px rgba(0,0,0,.6),0 0 14px rgba(232,197,107,.45)}
+body[data-style="f"] .txt{display:flex;flex-direction:column;align-items:flex-start;min-width:0;
+  padding-left:20px;border-left:1px solid rgba(232,197,107,.45)}
+body[data-style="f"] #line{order:-1;margin:0 0 6px;font-size:18px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;
+  color:#E8C56B;text-align:left;text-shadow:0 0 10px rgba(232,197,107,.35);transform:translateX(calc((1 - var(--a3,1)) * -16px))}
+body[data-style="f"] #name{margin:0;font-size:52px;font-weight:600;letter-spacing:-.01em;color:#FCFAF8;text-align:left;
+  text-shadow:0 2px 10px rgba(0,0,0,.5);transform:translateX(calc((1 - var(--a2,1)) * -16px))}
 #help{
   display:none;
   position:fixed;inset:12px auto auto 12px;
@@ -151,14 +384,21 @@ body.preview #stage{
 </style>
 </head>
 <body>
+<canvas id="fx"></canvas>
 <div id="stage">
   <div id="alert" aria-live="polite">
-    <div class="ava-box">
-      <div class="glow" id="glow"></div>
-      <img id="ava" alt="" src="assets/avatar_default.svg">
+    <div class="card">
+      <div class="sheen" id="sheen"></div>
+      <div class="ava-box">
+        <div class="glow" id="glow"></div>
+        <div class="ring"></div>
+        <img id="ava" alt="" src="assets/avatar_default.svg">
+      </div>
+      <div class="txt">
+        <div id="name"></div>
+        <div id="line"></div>
+      </div>
     </div>
-    <div id="name"></div>
-    <div id="line"></div>
   </div>
 </div>
 <div id="help">
@@ -172,7 +412,7 @@ body.preview #stage{
     TikTok LIVE Studio: Link olaraq GitHub Pages ünvanını yapışdırın.<br>
     TikFinity AZ Studio açıq olmalıdır (http://localhost:4000)<br>
     Otağa giriş (member) hadisəsində ad və şəkil görünür.<br>
-    URL: ?duration=3 &nbsp; ?maxqueue=10 &nbsp; ?cooldown=10 &nbsp; ?text=Xoş gəldin! &nbsp; ?port=21213 &nbsp; ?test=1
+    URL: ?style=d (standart) | a–f | classic &nbsp; ?duration=6 &nbsp; ?maxqueue=10 &nbsp; ?cooldown=10 &nbsp; ?text=Xoş gəldin! &nbsp; ?port=21213 &nbsp; ?test=1
   </div>
 </div>
 <script src="studio-connect.js"></script>
@@ -195,7 +435,7 @@ body.preview #stage{
     step: flag('step', false),
     ws: flag('ws', true),
     duration: Math.min(30, Math.max(0.8, (function(){
-      let v = num('duration', 3);
+      let v = num('duration', 6);
       if (v > 20) v = v / 1000;
       return v;
     })())),
@@ -205,6 +445,7 @@ body.preview #stage{
     text: (Q.get('text') != null && String(Q.get('text')).trim() !== '')
       ? String(Q.get('text'))
       : 'yayına qoşuldu',
+    style: (/^[a-f]$/i.test(Q.get('style') || '') ? String(Q.get('style')).toLowerCase() : (/^(classic|0|old)$/i.test(Q.get('style') || '') ? '' : 'd')),
     bg: Q.get('bg') || '',
     bgimg: Q.get('bgimg') || '',
     fallback: 'assets/avatar_default.svg'
@@ -221,9 +462,11 @@ body.preview #stage{
     document.body.style.setProperty('--page-bg-img', 'url("' + raw + '")');
   }
 
+  if (CFG.style) document.body.setAttribute('data-style', CFG.style);
   const DEFAULT_AV = CFG.fallback;
-  const ENTER = 0.42;
-  const EXIT = 0.36;
+  const ENTER = CFG.style ? 0.80 : 0.42;
+  const EXIT = CFG.style ? 0.50 : 0.36;
+  const FIT = ({a:[64,540,36], b:[50,320,28], c:[46,380,26], d:[40,380,24], e:[44,520,28], f:[52,380,30]})[CFG.style] || [72,560,42];
   const MIN_HOLD = 0.40;
 
   const TEST = [
@@ -243,7 +486,8 @@ body.preview #stage{
     glow: document.getElementById('glow'),
     name: document.getElementById('name'),
     line: document.getElementById('line'),
-    help: document.getElementById('help')
+    help: document.getElementById('help'),
+    sheen: document.getElementById('sheen')
   };
 
   const queue = [];
@@ -358,12 +602,65 @@ body.preview #stage{
   function fitName(text) {
     const el = els.name;
     el.textContent = text;
-    el.style.fontSize = '72px';
-    const max = 560;
-    let size = 72;
-    while (size > 42 && el.scrollWidth > max) {
+    el.style.fontSize = FIT[0] + 'px';
+    const max = FIT[1];
+    let size = FIT[0];
+    while (size > FIT[2] && el.scrollWidth > max) {
       size -= 2;
       el.style.fontSize = size + 'px';
+    }
+  }
+
+  const fx = document.getElementById('fx');
+  const fxc = fx.getContext('2d');
+  let parts = [];
+  function splitLine() {
+    const txt = els.line.textContent;
+    els.line.textContent = '';
+    for (const ch of Array.from(txt)) { const sp = document.createElement('span'); sp.className = 'ch'; sp.textContent = ch; els.line.appendChild(sp); }
+    let seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const COLS = ['#FFD34E','#FF4F8B','#25F4EE','#FFFFFF','#FF9A2E'];
+    parts = [];
+    for (let i = 0; i < 90; i++) {
+      const a = -Math.PI / 2 + (rnd() - 0.5) * Math.PI * 1.5;
+      const sp = 380 + rnd() * 520;
+      parts.push({vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: COLS[i % COLS.length], w: 8 + rnd() * 8, h: 4 + rnd() * 4,
+        r0: rnd() * 6.28, vr: (rnd() - 0.5) * 14, d: rnd() * 0.12, sw: rnd() * 6.28});
+    }
+  }
+  function drawFx(t) {
+    const W = fx.clientWidth, H = fx.clientHeight, dpr = devicePixelRatio || 1;
+    if (fx.width !== Math.round(W * dpr)) { fx.width = Math.round(W * dpr); fx.height = Math.round(H * dpr); }
+    fxc.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fxc.clearRect(0, 0, W, H);
+    if (CFG.style !== 'e' || !current || t < 0) return;
+    const r = els.ava.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (const p of parts) {
+      const tt = t - 0.18 - p.d;
+      if (tt <= 0 || tt > 3.2) continue;
+      const drag = (1 - Math.exp(-2.6 * tt)) / 2.6;
+      const x = cx + p.vx * drag + Math.sin(p.sw + tt * 5) * 10;
+      const y = cy + p.vy * drag + 260 * tt * tt * 0.5;
+      const alpha = clamp(1 - (tt - 1.8) / 1.2, 0, 1);
+      fxc.save(); fxc.globalAlpha = alpha; fxc.translate(x, y); fxc.rotate(p.r0 + p.vr * tt);
+      fxc.scale(1, Math.cos(p.sw + tt * 7));
+      fxc.fillStyle = p.c; fxc.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); fxc.restore();
+    }
+  }
+  function letters(t) {
+    if (CFG.style !== 'e') return;
+    const nu = 1 - Math.pow(1 - clamp((t - 0.72) / 0.45, 0, 1), 3);
+    els.name.style.opacity = nu.toFixed(3);
+    els.name.style.transform = 'translateY(' + ((1 - nu) * 16).toFixed(2) + 'px)';
+    const chs = els.line.children;
+    for (let i = 0; i < chs.length; i++) {
+      const u = clamp((t - 0.28 - i * 0.045) / 0.42, 0, 1);
+      const e = easeOutBack(u);
+      const wave = u >= 1 ? Math.sin((t - 1.2) * 3 - i * 0.5) * 3 * clamp(t - 1.2, 0, 1) : 0;
+      chs[i].style.opacity = clamp(u * 2.5, 0, 1).toFixed(3);
+      chs[i].style.transform = 'translateY(' + ((1 - e) * 40 + wave).toFixed(2) + 'px) scale(' + (0.5 + 0.5 * e).toFixed(3) + ')';
     }
   }
 
@@ -372,9 +669,12 @@ body.preview #stage{
     fitName(u.name);
     els.line.textContent = CFG.text;
     els.alert.style.display = 'flex';
+    if (CFG.style === 'e') splitLine();
+    if (els.sheen) { els.sheen.classList.remove('go'); void els.sheen.offsetWidth; els.sheen.classList.add('go'); }
   }
 
   function hideAlert() {
+    if (typeof drawFx === 'function') try { drawFx(-1); } catch (_) {}
     els.alert.style.display = 'none';
     els.alert.style.opacity = '0';
     els.glow.style.opacity = '0';
@@ -425,6 +725,21 @@ body.preview #stage{
       glowSc = 1.06 + 0.08 * e;
     }
     current.phase = phase;
+    if (CFG.style) {
+      const tt = clamp(t / ENTER, 0, 1);
+      const st = (a, l) => clamp((tt - a) / l, 0, 1);
+      const eo = x => 1 - Math.pow(1 - x, 3);
+      const S = els.alert.style;
+      S.setProperty('--a0', eo(st(0, .55)).toFixed(4));
+      S.setProperty('--a1', eo(st(CFG.style === 'a' ? 0 : .12, .45)).toFixed(4));
+      S.setProperty('--a1b', easeOutBack(st(CFG.style === 'a' ? 0 : .12, .55)).toFixed(4));
+      S.setProperty('--a2', eo(st(.30, .50)).toFixed(4));
+      S.setProperty('--a3', eo(st(.45, .55)).toFixed(4));
+      letters(t); drawFx(t);
+      if (phase === 'enter') { scale = 1; opacity = 1; }
+      else if (phase === 'exit') { scale = 1 - 0.06 * easeInCubic(u); opacity = 1 - (1 - Math.pow(1 - u, 2)); }
+      else { scale = 1; opacity = 1; }
+    }
     els.alert.style.opacity = String(opacity);
     els.alert.style.transform = 'scale(' + scale + ')';
     els.glow.style.opacity = String(glowOp);
