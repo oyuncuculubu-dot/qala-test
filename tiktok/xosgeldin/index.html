@@ -201,6 +201,7 @@ body.preview #stage{
     })())),
     maxqueue: Math.max(1, Math.round(num('maxqueue', 10))),
     cooldown: Math.max(0, num('cooldown', 10)),
+    firstact: flag('firstact', true),
     text: (Q.get('text') != null && String(Q.get('text')).trim() !== '')
       ? String(Q.get('text'))
       : 'yayına qoşuldu',
@@ -472,7 +473,43 @@ body.preview #stage{
 
 
   const seenTs = { member: 0 };
+  /* TikTok often does not deliver join (member) events to an unauthenticated
+     connection. Fallback: greet a viewer the first time they like, chat or
+     send a gift in this session. Disable with ?firstact=0. */
+  const greeted = new Set();
+  let primed = false;
+  function userKey(u){ return String((u && (u.uniqueId || u.handle || u.nickname)) || '').replace(/^@+/, '').toLowerCase(); }
+  function primeFrom(p){
+    (Array.isArray(p.recentEvents) ? p.recentEvents : []).forEach(e => { const k = userKey(e); if (k) greeted.add(k); });
+    ['lastLikeEvent','lastGiftEvent','lastMemberEvent'].forEach(n => { const k = userKey(p[n]); if (k) greeted.add(k); });
+    primed = true;
+  }
+  function greetFirst(u){
+    if (!CFG.firstact || !u) return;
+    const k = userKey(u);
+    if (!k || k === 'izleyici' || greeted.has(k)) return;
+    const streamer = String(p_streamer || '').replace(/^@+/, '').toLowerCase();
+    if (streamer && k === streamer) { greeted.add(k); return; }
+    greeted.add(k);
+    onMember({ event:'member', uniqueId: u.uniqueId || k, nickname: u.nickname || u.uniqueId || k, profilePictureUrl: u.avatarUrl || u.profilePictureUrl || '' });
+  }
+  let p_streamer = '';
+  function activityFallback(p){
+    if (!p || typeof p !== 'object') return;
+    if (p.streamerHandle || p.username) p_streamer = p.streamerHandle || p.username;
+    if (!primed) { primeFrom(p); return; }
+    const t = String(p.type || '');
+    if (t === 'likeBurst') greetFirst(p.lastLikeEvent);
+    else if (t === 'alertEvent') greetFirst(p.lastGiftEvent);
+    else if (t === 'chatMessage') {
+      const e = Array.isArray(p.recentEvents) ? p.recentEvents.find(x => x && x.type === 'chat') : null;
+      greetFirst(e);
+    }
+  }
+
   function handleAppPayload(p){
+    try { activityFallback(p); } catch (_) {}
+    if (p && p.lastMemberEvent) { const mk = userKey(p.lastMemberEvent); if (mk) greeted.add(mk); }
     if (p && (p.type === 'memberJoin' || p.type === 'member') && p.lastMemberEvent) {
       const ev = p.lastMemberEvent;
       if (ev.timestamp && ev.timestamp === seenTs.member) return;
