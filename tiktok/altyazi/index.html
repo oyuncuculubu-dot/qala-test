@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GameCamp · Avto tərcümə altyazı</title>
+<!--
+  GameCamp live subtitle overlay (prototype).
+  Browser source: 1920x1080 (style=kino|gamecamp) or 1080x1920 (style=vertikal), transparent.
+  Messages (WebSocket ws://127.0.0.1:4000/ws, same JSON stream as other widgets):
+    {type:'subtitle', id:'u42', orig:'Stay close…', az:'Yaxın durun…', lang:'en', speaker:'Komandir', final:true}
+  Same id + final:false = interim text (updates in place); final:true = settled line.
+  Query: ?style=kino (default)|gamecamp|vertikal  &size=48  &pos=bottom|top|middle  &orig=1|0
+         &delay=2000 (ms, sync with stream delay)  &hold=6000 (ms visible after final)
+         &host=127.0.0.1:4000   &demo=1 (offline demo loop)   &bg=1 (grey test background)
+-->
+<style>
+@font-face{font-family:GCInter;src:url(fonts/inter-latin-ext-400-normal.woff2) format("woff2");font-weight:400;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1EFF}
+@font-face{font-family:GCInter;src:url(fonts/inter-latin-400-normal.woff2) format("woff2");font-weight:400}
+@font-face{font-family:GCInter;src:url(fonts/inter-latin-ext-500-normal.woff2) format("woff2");font-weight:500;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1EFF}
+@font-face{font-family:GCInter;src:url(fonts/inter-latin-500-normal.woff2) format("woff2");font-weight:500}
+@font-face{font-family:GCInter;src:url(fonts/inter-latin-ext-600-normal.woff2) format("woff2");font-weight:600;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1EFF}
+@font-face{font-family:GCInter;src:url(fonts/inter-latin-600-normal.woff2) format("woff2");font-weight:600}
+@font-face{font-family:GCInter;src:url(fonts/inter-latin-ext-700-normal.woff2) format("woff2");font-weight:700;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1EFF}
+@font-face{font-family:GCInter;src:url(fonts/inter-latin-700-normal.woff2) format("woff2");font-weight:700}
+@font-face{font-family:GCRoboto;src:url(fonts/roboto-400-latin-ext.woff2) format("woff2");font-weight:400;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1EFF}
+@font-face{font-family:GCRoboto;src:url(fonts/roboto-400-latin.woff2) format("woff2");font-weight:400}
+@font-face{font-family:GCRoboto;src:url(fonts/roboto-500-latin-ext.woff2) format("woff2");font-weight:500;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1EFF}
+@font-face{font-family:GCRoboto;src:url(fonts/roboto-500-latin.woff2) format("woff2");font-weight:500}
+:root{--size:48px;--acc:#7C5CFF}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}
+body.testbg{background:#3a3d44 linear-gradient(160deg,#4a4f58,#1d1f24)}
+#stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 6vw 8.5vh;box-sizing:border-box;pointer-events:none}
+body[data-pos=top] #stage{justify-content:flex-start;padding-top:7vh}
+body[data-pos=middle] #stage{justify-content:center}
+.line{transition:opacity .28s ease,transform .28s ease;will-change:opacity,transform}
+.line.in{animation:in .26s ease-out both}
+.line.out{opacity:0;transform:translateY(6px)}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.o{display:block}.a{display:block}
+body[data-orig="0"] .o{display:none}
+.interim{opacity:.55}
+
+/* ---- A · Kino (Netflix/YouTube-like) ---- */
+body[data-style=kino] .line{text-align:center;font-family:GCRoboto,GCInter,sans-serif;max-width:1500px}
+body[data-style=kino] .o{font-size:calc(var(--size)*.56);line-height:1.3;font-style:italic;color:rgba(255,255,255,.74);margin-bottom:.35em;
+  text-shadow:0 0 2px rgba(0,0,0,.9),0 1px 3px rgba(0,0,0,.9),0 0 12px rgba(0,0,0,.6)}
+body[data-style=kino] .a{font-size:var(--size);line-height:1.28;font-weight:500;color:#fff;text-wrap:balance;
+  text-shadow:0 0 2px #000,0 0 3px rgba(0,0,0,.95),0 2px 4px rgba(0,0,0,.85),0 0 18px rgba(0,0,0,.55)}
+body[data-style=kino] .meta{display:none}
+
+/* ---- B · GameCamp glass ---- */
+body[data-style=gamecamp] .line{position:relative;width:min(1180px,88vw);box-sizing:border-box;padding:.46em .64em .52em;border-radius:20px;font-family:GCInter,sans-serif;
+  font-size:var(--size);background:linear-gradient(180deg,rgba(22,20,30,.72),rgba(12,11,17,.78));backdrop-filter:blur(22px) saturate(1.3);
+  border:1px solid rgba(255,255,255,.09);box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 24px 60px rgba(0,0,0,.45)}
+body[data-style=gamecamp] .line::before{content:"";position:absolute;left:0;top:.46em;bottom:.52em;width:3px;border-radius:0 3px 3px 0;background:var(--acc);box-shadow:0 0 14px rgba(124,92,255,.7)}
+body[data-style=gamecamp] .meta{display:flex;align-items:center;gap:10px;margin-bottom:.3em;font-size:15px}
+body[data-style=gamecamp] .spk{height:30px;display:flex;align-items:center;padding:0 12px;border-radius:15px;background:rgba(124,92,255,.18);border:1px solid rgba(124,92,255,.35);font-weight:600;color:#D7CCFF;letter-spacing:.02em;text-transform:uppercase}
+body[data-style=gamecamp] .spk:empty{display:none}
+body[data-style=gamecamp] .lng{height:30px;display:flex;align-items:center;padding:0 10px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:13px;font-weight:600;color:#B5B5BF;letter-spacing:.08em}
+body[data-style=gamecamp] .a{order:1;font-size:calc(var(--size)*.83);line-height:1.3;font-weight:600;color:#fff;letter-spacing:-.012em;text-wrap:balance}
+body[data-style=gamecamp] .o{margin-top:.45em;font-size:calc(var(--size)*.44);line-height:1.42;color:#9A9AA6}
+body[data-style=gamecamp] .line .wrap{display:flex;flex-direction:column}
+body[data-style=gamecamp] .wrap .o{order:2}
+
+/* ---- C · Vertikal (TikTok) ---- */
+body[data-style=vertikal] #stage{justify-content:flex-start;padding:48vh 6vw 0}
+body[data-style=vertikal] .line{text-align:center;font-family:GCInter,sans-serif}
+body[data-style=vertikal] .meta{display:flex;justify-content:center;margin-bottom:22px}
+body[data-style=vertikal] .lng{height:44px;display:inline-flex;align-items:center;padding:0 18px;border-radius:22px;background:rgba(124,92,255,.92);color:#fff;font-size:20px;font-weight:700;letter-spacing:.08em}
+body[data-style=vertikal] .spk{display:none}
+body[data-style=vertikal] .a{font-size:calc(var(--size)*1.375);line-height:1.27;font-weight:700;color:#fff;letter-spacing:-.015em;text-wrap:balance;
+  text-shadow:0 0 3px rgba(0,0,0,.9),0 3px 6px rgba(0,0,0,.8),0 0 28px rgba(0,0,0,.55)}
+body[data-style=vertikal] .a .hl{color:#0A0A0C;background:#FFD43B;padding:0 .18em;border-radius:.18em;text-shadow:none;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+body[data-style=vertikal] .o{order:2;margin-top:18px;font-size:calc(var(--size)*.625);line-height:1.33;font-weight:500;color:rgba(255,255,255,.8);text-shadow:0 2px 8px rgba(0,0,0,.9)}
+body[data-style=vertikal] .wrap{display:flex;flex-direction:column}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+(function(){
+'use strict';
+var q=new URLSearchParams(location.search);
+var STYLE=(q.get('style')||'kino').toLowerCase();
+if(['kino','gamecamp','vertikal'].indexOf(STYLE)<0)STYLE='kino';
+var SIZE=Math.max(18,Math.min(120,+q.get('size')||48));
+var DELAY=Math.max(0,+q.get('delay')||0), HOLD=Math.max(1500,+q.get('hold')||6000);
+var MAXL=STYLE==='kino'?1:2;
+document.body.dataset.style=STYLE;
+document.body.dataset.pos=q.get('pos')||'bottom';
+document.body.dataset.orig=q.get('orig')==='0'?'0':'1';
+document.documentElement.style.setProperty('--size',SIZE+'px');
+if(q.get('bg')==='1')document.body.classList.add('testbg');
+var stage=document.getElementById('stage');
+var lines={};  // id -> {el, timer}
+var order=[];
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function render(m){
+  var az=esc(m.az||'');
+  if(STYLE==='vertikal'&&m.final){ // highlight last 2 words (karaoke-style accent)
+    var w=az.split(' ');if(w.length>3){var t=w.splice(-2).join(' ');az=w.join(' ')+' <span class="hl">'+t+'</span>';}
+  }
+  var lang=(m.lang||'').toUpperCase();
+  return '<div class="meta"><span class="spk">'+esc(m.speaker||'')+'</span>'+(lang?'<span class="lng">'+esc(lang)+' → AZ</span>':'')+'</div>'+
+    '<div class="wrap"><span class="o">'+esc(m.orig||'')+'</span><span class="a'+(m.final?'':' interim')+'">'+az+'</span></div>';
+}
+function remove(id){var L=lines[id];if(!L)return;L.el.classList.add('out');
+  setTimeout(function(){L.el.remove()},300);delete lines[id];order=order.filter(function(x){return x!==id});}
+function show(m){
+  if(!m||!(m.az||m.orig))return;
+  if(window.__subsShown)window.__subsShown.push({id:m.id,t:Date.now(),az:m.az});
+  var id=String(m.id||('s'+Date.now()+Math.random()));
+  var L=lines[id];
+  if(!L){L=lines[id]={el:document.createElement('div')};L.el.className='line in';stage.appendChild(L.el);order.push(id);
+    while(order.length>MAXL)remove(order[0]);}
+  L.el.innerHTML=render(m);
+  clearTimeout(L.timer);
+  L.timer=setTimeout(function(){remove(id)},m.final?HOLD:HOLD*2);
+}
+var seen={},seenQ=[];
+function onMsg(raw){
+  var d;try{d=typeof raw==='string'?JSON.parse(raw):raw}catch(_){return}
+  if(!d)return;
+  var m=d.type==='subtitle'?(d.data&&typeof d.data==='object'?Object.assign({},d.data,{type:'subtitle'}):d):null;
+  if(!m)return;
+  if(m.id!=null){var key=m.id+'|'+(m.final===false?0:1)+'|'+(m.az||'');if(seen[key])return;seen[key]=1;seenQ.push(key);if(seenQ.length>200)delete seen[seenQ.shift()];}   // ws + SSE both deliver: show once
+  if(DELAY)setTimeout(function(){show(m)},DELAY);else show(m);
+}
+window.GCSubtitles={push:onMsg};
+
+// ---- connection (mirrors studio-connect.js resolution) ----
+function wsUrl(){
+  var h=(q.get('host')||q.get('studio')||q.get('server')||'').trim();
+  if(/^wss?:\/\//i.test(h))return h.replace(/\/?$/,'').replace(/(\/ws)?$/,'/ws');
+  if(h){h=h.replace(/^https?:\/\//i,'');if(!/:\d+/.test(h))h+=':'+(q.get('port')||'4000');return 'ws://'+h.replace(/\/.*$/,'')+'/ws';}
+  var local=location.protocol.indexOf('http')===0&&!/\.github\.io$/i.test(location.hostname);
+  if(local)return (location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws';
+  return 'ws://127.0.0.1:'+(q.get('port')||'4000')+'/ws';
+}
+var backoff=1000, wsFails=0, es=null;
+function httpBase(){var u=wsUrl().replace(/^ws/,'http');return u.replace(/\/ws$/,'');}
+function connect(){
+  var ws;try{ws=new WebSocket(wsUrl())}catch(_){return fallback()}
+  var opened=false;
+  ws.onopen=function(){opened=true;backoff=1000;wsFails=0};
+  ws.onmessage=function(e){onMsg(e.data)};
+  ws.onclose=function(){if(!opened&&++wsFails>=2&&window.EventSource&&!es)return fallback();setTimeout(connect,backoff);backoff=Math.min(backoff*2,15000)};
+  ws.onerror=function(){try{ws.close()}catch(_){}};
+}
+function sseOpen(){if(es)return;try{es=new EventSource(httpBase()+'/api/subs/events');es.onmessage=function(e){onMsg(e.data)};}catch(_){}}
+function fallback(){ // SSE straight from the subtitle module (also works when /ws is blocked)
+  try{es=new EventSource(httpBase()+'/api/subs/events');es.onmessage=function(e){onMsg(e.data)};
+    es.onerror=function(){};setTimeout(function(){if(es){try{es.close()}catch(_){}es=null}connect()},30000);}catch(_){setTimeout(connect,5000)}
+}
+
+// ---- demo ----
+var DEMO=[
+ {lang:'en',speaker:'Komandir',orig:'Stay close. The convoy crosses the bridge in two minutes.',az:'Yaxın durun. Karvan iki dəqiqəyə körpüdən keçəcək.'},
+ {lang:'en',speaker:'Komandir',orig:'Nobody fires until I give the order.',az:'Mən əmr verməyincə heç kim atəş açmasın.'},
+ {lang:'ru',speaker:'Sürücü',orig:'Поворачивай направо, полиция у нас на хвосте.',az:'Sağa dön, polis arxamızdadır.'},
+ {lang:'tr',speaker:'Ayşe',orig:'Çabuk ol, kapı kapanıyor!',az:'Tez ol, qapı bağlanır!'},
+ {lang:'en',speaker:'',orig:'Everything changes tonight. Take the car, turn right.',az:'Bu gecə hər şey dəyişir. Maşını götür, sağa dön.'}
+];
+function demo(){var i=0,n=0;
+  (function next(){var s=DEMO[i++%DEMO.length],id='d'+(n++),w=s.az.split(' '),k=Math.ceil(w.length/2);
+    onMsg({type:'subtitle',id:id,lang:s.lang,speaker:s.speaker,orig:s.orig,az:w.slice(0,k).join(' ')+'…',final:false});
+    setTimeout(function(){onMsg({type:'subtitle',id:id,lang:s.lang,speaker:s.speaker,orig:s.orig,az:s.az,final:true})},700);
+    setTimeout(next,4200);})();}
+if(q.get('test')==='1')onMsg({type:'subtitle',id:'test',lang:'en',orig:'Stay close. The convoy crosses the bridge in two minutes.',az:'Yaxında qalın. Konvoy iki dəqiqədən sonra körpünü keçəcək.',final:true});
+if(q.get('demo')==='1')demo();else{connect();if(window.EventSource&&q.get('sse')!=='0')sseOpen();}
+})();
+</script>
+</body>
+</html>
