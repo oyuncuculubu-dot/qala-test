@@ -27,7 +27,8 @@ img{user-select:none;-webkit-user-drag:none}
   box-shadow:0 0 0 1px rgba(120,0,16,.35) inset}
 #fill:after{content:"";position:absolute;left:8px;right:8px;top:3px;height:4px;border-radius:3px;background:linear-gradient(180deg,rgba(255,220,225,.55),rgba(255,220,225,0))}
 #star{left:614px;top:655px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
-#heartIcon{left:340px;top:575px;transform-origin:35px 31px}
+#heartWrap{left:340px;top:575px;width:70px;height:59px;transform-origin:35px 31px;will-change:transform;pointer-events:none}
+#heartIcon{position:absolute;left:0;top:0;width:70px;height:59px;pointer-events:none}
 #count{left:420px;top:571px;width:450px;height:66px;display:flex;justify-content:center;align-items:center;white-space:nowrap;
   font-family:"LGNunito",system-ui,sans-serif;font-weight:900;font-size:60px;line-height:66px;letter-spacing:.5px;
   color:#f3d8cf;text-shadow:0 2px 0 rgba(120,80,80,.55),0 4px 6px rgba(0,0,0,.6);font-variant-numeric:tabular-nums}
@@ -57,7 +58,9 @@ img{user-select:none;-webkit-user-drag:none}
   <img id="panel" class="abs" src="assets/panel.png" alt="">
   <div id="track" class="abs"><div id="fill" class="abs"></div></div>
   <img id="star" class="abs" src="assets/star.png" alt="">
-  <img id="heartIcon" class="abs" src="assets/heart_icon.png" alt="">
+  <div id="heartWrap" class="abs">
+    <img id="heartIcon" src="assets/heart_icon.png" alt="">
+  </div>
   <div id="count" class="abs"><span id="cnt" style="display:inline-block;transform-origin:50% 50%"><span id="cur">0</span> / <span id="goal" class="g">10 000</span></span></div>
   <canvas id="fx" class="abs" width="1280" height="720"></canvas>
 </div>
@@ -73,6 +76,7 @@ let STEP=Math.round(num('step',BASE_GOAL));
 let AUTO=Q.get('autostep')!=='0';
 let BASE_LIKES=0, BASE_ROOM=null, RESET_AT=null, roomId=null, rawTotal=null;
 const DEMO=Q.get('demo')==='1'||Q.get('demo')==='true';
+const REC=Q.get('rec')==='1';
 const SC=window.StudioConnect?StudioConnect.resolve():null;
 const SERVER=((SC&&SC.http)||(Q.get('host')||Q.get('studio')||Q.get('server')||'').replace(/\/$/,'')||'');
 if(Q.get('bg')==='1')document.body.classList.add('preview');
@@ -89,7 +93,7 @@ function layout(){
 let goal=BASE_GOAL, target=0, shown=0, level=0, levelV=0;
 let celebrating=false, celebratedGoal=-1, started=false;
 const curEl=document.getElementById('cur'), goalEl=document.getElementById('goal');
-const fillEl=document.getElementById('fill'), heartIcon=document.getElementById('heartIcon');
+const fillEl=document.getElementById('fill'), heartIcon=document.getElementById('heartIcon'), heartWrap=document.getElementById('heartWrap');
 const countEl=document.getElementById('count'), bounceEl=document.getElementById('bounce');
 const cntEl=document.getElementById('cnt');let lastW=0;
 const fmt=n=>Math.floor(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
@@ -118,7 +122,9 @@ function setTotal(t,opts){
   onLikes(opts.added||delta);
 }
 function onLikes(n){
-  heartIcon.classList.remove('pop');void heartIcon.offsetWidth;heartIcon.classList.add('pop');
+  jellyT=0;
+  shocks.push({t:0,life:0.48});
+  if(n>=24) shocks.push({t:-0.08,life:0.52});
   const lf=floats[floats.length-1];
   if(lf&&lf.t<0.45){lf.n+=n;lf.txt='+'+fmt(lf.n);lf.t=Math.min(lf.t,0.12);}
   else floats.push({x:380,y:578,t:0,n,txt:'+'+fmt(n)});
@@ -379,6 +385,40 @@ function drawFx(dt){
     c.globalAlpha=a;c.lineWidth=5;c.strokeStyle='rgba(30,6,10,.85)';c.strokeText(f.txt,f.x,y);
     c.fillStyle='#ff3c50';c.fillText(f.txt,f.x,y);c.globalAlpha=1;}
 }
+
+// ---------- heart C: idle sway + jelly bounce + shockwave rings ----------
+let jellyT=99;
+const shocks=[];
+function jelly(t){
+  const keys=[[0,1,1],[0.055,1.30,0.74],[0.15,0.82,1.24],[0.26,1.15,0.88],[0.38,0.91,1.10],[0.50,1.06,0.96],[0.62,0.98,1.03],[0.74,1,1]];
+  if(t>=0.74) return {sx:1,sy:1};
+  for(let i=1;i<keys.length;i++){
+    if(t<=keys[i][0]){
+      const a=keys[i-1], b=keys[i], u=(t-a[0])/(b[0]-a[0]), e=u*u*(3-2*u);
+      return {sx:a[1]+(b[1]-a[1])*e, sy:a[2]+(b[2]-a[2])*e};
+    }
+  }
+  return {sx:1,sy:1};
+}
+function tickHeart(dt){
+  jellyT+=dt;
+  const sway=Math.sin(T*2.05)*2.8+Math.sin(T*3.1)*0.9;
+  const sq=Math.sin(T*2.05);
+  const j=jelly(jellyT);
+  heartWrap.style.transform='rotate('+sway+'deg) scale('+(1+sq*0.03)*j.sx+','+(1-sq*0.03)*j.sy+')';
+  const c=fx, cx=375, cy=605;
+  for(let i=shocks.length-1;i>=0;i--){
+    const s=shocks[i]; s.t+=dt; if(s.t<0) continue;
+    if(s.t>s.life){shocks.splice(i,1);continue;}
+    const k=s.t/s.life, rad=14+k*58, a=Math.pow(1-k,1.35)*0.9;
+    c.save();
+    c.globalAlpha=a*0.35; c.strokeStyle='#ff6a7c'; c.lineWidth=7*(1-k*0.5);
+    c.beginPath();c.arc(cx,cy,rad,0,6.283);c.stroke();
+    c.globalAlpha=a*0.85; c.strokeStyle='#ffd0d6'; c.lineWidth=2.2*(1-k*0.4);
+    c.beginPath();c.arc(cx,cy,rad,0,6.283);c.stroke();
+    c.restore();
+  }
+}
 // ---------- main loop ----------
 let last=performance.now(), T=0, breathT=0;
 const pandaWrap=document.getElementById('pandaWrap');
@@ -422,13 +462,13 @@ function loop(now){
   // breathing
   const br=Math.sin(T*2*Math.PI/3.8);
   pandaWrap.style.transform=`scale(${1+br*0.0035},${1+br*0.0075})`;
-  drawLiquid(T);drawEyes(T,dt);drawFx(dt);
+  drawLiquid(T);drawEyes(T,dt);drawFx(dt);tickHeart(dt);
   requestAnimationFrame(loop);
 }
 addEventListener('resize',layout);
 Promise.all([load('assets/liquid_mask.png'),load('assets/liquid_edge.png'),load('assets/glass_hl.png'),load('assets/liquid_tex.png'),Promise.all([0,1,2,3,4,5].map(i=>load('assets/bubble'+i+'.png'))),Promise.all([0,1].map(i=>load('assets/eyelid'+i+'.png'))),document.fonts?document.fonts.load('900 60px LGNunito'):0])
 .then(([m,e,h,tx,bb,ll])=>{ll.forEach((l,i)=>lidImgs[i]=l);maskImg=m;edgeImg=e;hlImg=h;texImg=tx;bb.forEach((b,i)=>bubImgs[i]=b);layout();
-  const go=()=>{ if(DEMO) demo(); else connect(); };
+  const go=()=>{ if(REC) return; if(DEMO) demo(); else connect(); };
   loadSettings().then(go,go);
   last=performance.now();requestAnimationFrame(loop);
   window.__ready=true;});
