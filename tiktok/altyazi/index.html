@@ -130,19 +130,40 @@ function onMsg(raw){
 }
 window.GCSubtitles={push:onMsg};
 
-// ---- connection (mirrors studio-connect.js resolution) ----
-function wsUrl(){
-  var h=(q.get('host')||q.get('studio')||q.get('server')||'').trim();
-  if(/^wss?:\/\//i.test(h))return h.replace(/\/?$/,'').replace(/(\/ws)?$/,'/ws');
-  if(h){h=h.replace(/^https?:\/\//i,'');if(!/:\d+/.test(h))h+=':'+(q.get('port')||'4000');return 'ws://'+h.replace(/\/.*$/,'')+'/ws';}
+// ---- connection (same host rules as studio-connect.js: https/wss tunnels keep port 443, no :4000) ----
+function parseTarget(raw){
+  raw=String(raw||'').trim();
+  if(!raw)return null;
+  try{
+    if(/^wss?:\/\//i.test(raw)){
+      var wu=new URL(raw);
+      if(!wu.port&&wu.protocol==='ws:') wu.port=q.get('port')||'4000';
+      var httpProto=wu.protocol==='wss:'?'https:':'http:';
+      var path=/\/ws\/?$/i.test(wu.pathname)?wu.pathname.replace(/\/$/,''):'/ws';
+      return {http:httpProto+'//'+wu.host,ws:wu.protocol+'//'+wu.host+path};
+    }
+    if(!/^https?:\/\//i.test(raw)) raw='http://'+raw;
+    var u=new URL(raw);
+    if(!u.port&&u.protocol==='http:') u.port=q.get('port')||'4000';
+    var wsProto=u.protocol==='https:'?'wss:':'ws:';
+    return {http:u.origin,ws:wsProto+'//'+u.host+'/ws'};
+  }catch(_){return null;}
+}
+function target(){
+  var parsed=parseTarget(q.get('host')||q.get('studio')||q.get('server')||'');
+  if(parsed)return parsed;
   var local=location.protocol.indexOf('http')===0&&!/\.github\.io$/i.test(location.hostname);
-  if(local)return (location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws';
-  return 'ws://127.0.0.1:'+(q.get('port')||'4000')+'/ws';
+  if(local){
+    var wsProto=location.protocol==='https:'?'wss://':'ws://';
+    return {http:location.protocol+'//'+location.host,ws:wsProto+location.host+'/ws'};
+  }
+  var port=q.get('port')||'4000';
+  return {http:'http://127.0.0.1:'+port,ws:'ws://127.0.0.1:'+port+'/ws'};
 }
 var backoff=1000, wsFails=0, es=null;
-function httpBase(){var u=wsUrl().replace(/^ws/,'http');return u.replace(/\/ws$/,'');}
+function httpBase(){return target().http;}
 function connect(){
-  var ws;try{ws=new WebSocket(wsUrl())}catch(_){return fallback()}
+  var ws;try{ws=new WebSocket(target().ws)}catch(_){return fallback()}
   var opened=false;
   ws.onopen=function(){opened=true;backoff=1000;wsFails=0};
   ws.onmessage=function(e){onMsg(e.data)};

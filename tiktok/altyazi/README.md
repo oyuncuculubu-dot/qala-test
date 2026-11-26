@@ -15,7 +15,7 @@ Hər sətir yalnız bir dəfə göstərilir.
 | orig | 0 = orijinal sətri gizlət | 1 |
 | delay | ms, yayım gecikməsinə uyğunlaşdırmaq üçün | 0 |
 | hold | ms, sətir ekranda qalma müddəti | 6000 |
-| host | server, məs. 192.168.1.5:4000 | 127.0.0.1:4000 |
+| host | yerli server (127.0.0.1:4000) və ya HTTPS tunel (https://….trycloudflare.com) — :4000 yalnız http üçün | 127.0.0.1:4000 |
 | demo | 1 = nümunə altyazılar | – |
 | test | 1 = bir sınaq sətri | – |
 | bg | 1 = boz fon (yoxlama üçün) | – |
