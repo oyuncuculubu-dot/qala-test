@@ -50,7 +50,7 @@ var POSX=parseFloat(qs.get('x'))||0, POSY=parseFloat(qs.get('y'))||0;
 var MANUAL=qs.get('manual')==='1';                    // test harness drives time via window.__vg
 var DEMO=qs.get('demo')==='1';                        // local fake feed (no studio needed)
 var remote=location.protocol==='file:'||/\.github\.io$/i.test(location.hostname)||qs.has('studio')||qs.has('host')||qs.has('server');
-var API=remote?((qs.get('host')||qs.get('studio')||qs.get('server')||'http://127.0.0.1:'+(qs.get('port')||'4000')).replace(/^(?!https?:\/\/|wss?:\/\/)/,'http://').replace(/\/+$/,'')).replace(/^wss:/,'https:').replace(/^ws:/,'http:'):'';
+var API=remote?((qs.get('host')||qs.get('studio')||qs.get('server')||(/\.github\.io$/i.test(location.hostname)?'https://widget.gamecamplive.com':'http://127.0.0.1:'+(qs.get('port')||'4000'))).replace(/^(?!https?:\/\/|wss?:\/\/)/,'http://').replace(/\/+$/,'')).replace(/^wss:/,'https:').replace(/^ws:/,'http:'):'';
 // asset base: same-folder /assets (works for /tiktok/followgoal/, /widgets/followgoal/, and file://)
 var AB=(function(){var p=location.pathname.replace(/\/index\.html$/i,'').replace(/\/?$/,'/');return p+'assets'})();
 document.querySelectorAll('style').forEach(function(s){s.textContent=s.textContent.split('ASSET/').join(AB+'/')});

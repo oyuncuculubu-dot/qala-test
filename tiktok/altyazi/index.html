@@ -186,6 +186,7 @@ function target(){
     var wsProto=location.protocol==='https:'?'wss://':'ws://';
     return {http:location.protocol+'//'+location.host,ws:wsProto+location.host+'/ws'};
   }
+  if(/\.github\.io$/i.test(location.hostname))return {http:'https://widget.gamecamplive.com',ws:'wss://widget.gamecamplive.com/ws'}; // permanent GameCamp address
   var port=q.get('port')||'4000';
   return {http:'http://127.0.0.1:'+port,ws:'ws://127.0.0.1:'+port+'/ws'};
 }

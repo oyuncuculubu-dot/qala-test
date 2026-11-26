@@ -51,6 +51,10 @@
     var remote = proto === 'file:' || /\.github\.io$/i.test(hostName) || !!raw;
     var parsed = parseTarget(raw, port);
     if (parsed) return { remote: true, http: parsed.http, ws: parsed.ws };
+    // GitHub Pages without ?host: use the permanent GameCamp address (Cloudflare, never changes).
+    if (!raw && /\.github\.io$/i.test(hostName)) {
+      return { remote: true, http: 'https://widget.gamecamplive.com', ws: 'wss://widget.gamecamplive.com/ws' };
+    }
     if (remote) {
       return {
         remote: true,
