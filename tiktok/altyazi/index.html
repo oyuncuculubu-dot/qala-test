@@ -74,6 +74,9 @@ body[data-style=vertikal] .a{font-size:calc(var(--size)*1.375);line-height:1.27;
 body[data-style=vertikal] .a .hl{color:#0A0A0C;background:#FFD43B;padding:0 .18em;border-radius:.18em;text-shadow:none;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 body[data-style=vertikal] .o{order:2;margin-top:18px;font-size:calc(var(--size)*.625);line-height:1.33;font-weight:500;color:rgba(255,255,255,.8);text-shadow:0 2px 8px rgba(0,0,0,.9)}
 body[data-style=vertikal] .wrap{display:flex;flex-direction:column}
+.line.item .spk{display:inline-flex!important;height:28px;align-items:center;padding:0 12px;border-radius:14px;background:rgba(255,196,0,.92);color:#111;font-weight:800;font-size:15px;letter-spacing:.06em;margin-right:8px}
+.line.item .meta{display:flex!important;justify-content:center;margin-bottom:.25em}
+body[data-style=kino] .line.item .lng{display:none}
 </style>
 </head>
 <body>
@@ -108,16 +111,21 @@ function render(m){
 }
 function remove(id){var L=lines[id];if(!L)return;L.el.classList.add('out');
   setTimeout(function(){L.el.remove()},300);delete lines[id];order=order.filter(function(x){return x!==id});}
+var ITEM='\u25A3';
 function show(m){
   if(!m||!(m.az||m.orig))return;
+  // OCR item/document text from GameCamp arrives with a ▣ marker: strip it and label the line
+  var isItem=String(m.orig||'').trim().charAt(0)===ITEM||String(m.az||'').trim().charAt(0)===ITEM;
+  if(isItem){m=Object.assign({},m,{orig:String(m.orig||'').replace(/^\s*\u25A3\s*/,''),az:String(m.az||'').replace(/^\s*\u25A3\s*/,''),speaker:m.speaker||'ƏŞYA'});}
   if(window.__subsShown)window.__subsShown.push({id:m.id,t:Date.now(),az:m.az});
   var id=String(m.id||('s'+Date.now()+Math.random()));
   var L=lines[id];
   if(!L){L=lines[id]={el:document.createElement('div')};L.el.className='line in';stage.appendChild(L.el);order.push(id);
     while(order.length>MAXL)remove(order[0]);}
   L.el.innerHTML=render(m);
+  L.el.classList.toggle('item',isItem);
   clearTimeout(L.timer);
-  L.timer=setTimeout(function(){remove(id)},m.final?HOLD:HOLD*2);
+  L.timer=setTimeout(function(){remove(id)},isItem?Math.max(HOLD,8000):(m.final?HOLD:HOLD*2));
 }
 var seen={},seenQ=[];
 function onMsg(raw){
