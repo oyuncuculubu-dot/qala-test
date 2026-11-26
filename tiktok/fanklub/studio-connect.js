@@ -23,14 +23,16 @@
     try {
       if (/^wss?:\/\//i.test(raw)) {
         var wu = new URL(raw);
-        if (!wu.port) wu.port = portFallback || '4000';
+        // wss:// hosts (e.g. trycloudflare tunnel) use the default 443; only force a port for plain ws://
+        if (!wu.port && wu.protocol === 'ws:') wu.port = portFallback || '4000';
         var httpProto = wu.protocol === 'wss:' ? 'https:' : 'http:';
         var path = /\/ws\/?$/i.test(wu.pathname) ? wu.pathname.replace(/\/$/, '') : '/ws';
         return { http: httpProto + '//' + wu.host, ws: wu.protocol + '//' + wu.host + path };
       }
       if (!/^https?:\/\//i.test(raw)) raw = 'http://' + raw;
       var u = new URL(raw);
-      if (!u.port) u.port = portFallback || '4000';
+      // https:// hosts (e.g. trycloudflare tunnel) use the default 443; only force a port for plain http://
+      if (!u.port && u.protocol === 'http:') u.port = portFallback || '4000';
       var wsProto = u.protocol === 'https:' ? 'wss:' : 'ws:';
       return { http: u.origin, ws: wsProto + '//' + u.host + '/ws' };
     } catch (_) {
