@@ -77,6 +77,11 @@ body[data-style=vertikal] .wrap{display:flex;flex-direction:column}
 .line.item .spk{display:inline-flex!important;height:28px;align-items:center;padding:0 12px;border-radius:14px;background:rgba(255,196,0,.92);color:#111;font-weight:800;font-size:15px;letter-spacing:.06em;margin-right:8px}
 .line.item .meta{display:flex!important;justify-content:center;margin-bottom:.25em}
 body[data-style=kino] .line.item .lng{display:none}
+.line.doc{width:min(1100px,86vw);box-sizing:border-box;text-align:left;padding:.5em .8em .6em;border-radius:16px;background:rgba(10,10,16,.78);border:1px solid rgba(255,255,255,.1);font-family:GCInter,GCRoboto,sans-serif}
+.line.doc .meta{display:flex!important;justify-content:flex-start;margin-bottom:.3em}
+.line.doc .spk{display:inline-flex!important;height:26px;align-items:center;padding:0 12px;border-radius:13px;background:#3DD6A3;color:#06231a;font-weight:800;font-size:14px;letter-spacing:.08em;text-transform:none}
+.line.doc::before{display:none!important}
+.line.doc .doc-t{font-size:calc(var(--size)*.5);line-height:1.38;font-weight:500;color:#fff;max-height:56vh;overflow:hidden;text-shadow:0 1px 3px rgba(0,0,0,.8)}
 </style>
 </head>
 <body>
@@ -111,9 +116,25 @@ function render(m){
 }
 function remove(id){var L=lines[id];if(!L)return;L.el.classList.add('out');
   setTimeout(function(){L.el.remove()},300);delete lines[id];order=order.filter(function(x){return x!==id});}
+var DOC='\u25A4',docState=null,docEl=null,docTimer=null;
+function docClear(){clearTimeout(docTimer);if(docEl){var e=docEl;e.classList.add('out');setTimeout(function(){e.remove()},300);docEl=null}docState=null}
+function docShow(m){   // OCR document/diary text from GameCamp: "▤<gid>.<n>/<total> text" parts, "▤CLEAR" when the page is closed
+  var o=String(m.orig||'').trim();
+  if(o.charAt(0)!==DOC)return false;
+  if(o===DOC+'CLEAR'){docClear();return true}
+  var mm=/^\u25A4(\d+)\.(\d+)\/(\d+)\s*/.exec(o);if(!mm)return false;
+  var gid=mm[1],n=+mm[2],tot=+mm[3];
+  if(!docState||docState.gid!==gid){docClear();docState={gid:gid,tot:tot,parts:{}};
+    docEl=document.createElement('div');docEl.className='line doc in';stage.appendChild(docEl)}
+  docState.parts[n]=String(m.az||'').replace(/^\s*\u25A4\s*[\d\.\\\/]*\s*/,'').trim();
+  var ks=Object.keys(docState.parts).map(Number).sort(function(a,b){return a-b}),txt=ks.map(function(k){return docState.parts[k]}).join(' ');
+  if(ks.length<docState.tot)txt+=' \u2026';
+  docEl.innerHTML='<div class="meta"><span class="spk">S\u018fN\u018fD</span></div><div class="wrap"><span class="a doc-t">'+esc(txt)+'</span></div>';
+  clearTimeout(docTimer);docTimer=setTimeout(docClear,120000);return true}
 var ITEM='\u25A3';
 function show(m){
   if(!m||!(m.az||m.orig))return;
+  if(docShow(m))return;
   // OCR item/document text from GameCamp arrives with a ▣ marker: strip it and label the line
   var isItem=String(m.orig||'').trim().charAt(0)===ITEM||String(m.az||'').trim().charAt(0)===ITEM;
   if(isItem){m=Object.assign({},m,{orig:String(m.orig||'').replace(/^\s*\u25A3\s*/,''),az:String(m.az||'').replace(/^\s*\u25A3\s*/,''),speaker:m.speaker||'ƏŞYA'});}
@@ -127,7 +148,7 @@ function show(m){
   clearTimeout(L.timer);
   L.timer=setTimeout(function(){remove(id)},isItem?Math.max(HOLD,8000):(m.final?HOLD:HOLD*2));
 }
-var seen={},seenQ=[];
+var seen={},seenQ=[];window.__on=function(m){onMsg(m)};
 function onMsg(raw){
   var d;try{d=typeof raw==='string'?JSON.parse(raw):raw}catch(_){return}
   if(!d)return;
